@@ -7,22 +7,32 @@ use App\Http\Requests\StoreFileRequest;
 use App\Models\File;
 use App\Services\FileStorageService;
 use App\Services\ActivityService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class FileController extends Controller
 {
     protected $storageService;
     protected $activityService;
+    protected NotificationService $notificationService;
 
-    public function __construct(FileStorageService $storageService, ActivityService $activityService)
-    {
+    public function __construct(
+        FileStorageService $storageService,
+        ActivityService $activityService,
+        NotificationService $notificationService
+    ) {
         $this->storageService = $storageService;
         $this->activityService = $activityService;
+        $this->notificationService = $notificationService;
     }
 
     public function upload(StoreFileRequest $request)
     {
         $file = $this->storageService->store($request->file('file'), $request->user()->id, $request->folder_id);
+
+        // storage_used diperbarui di dalam service, jadi user perlu di-refresh dulu.
+        $this->notificationService->quotaWarning($request->user()->fresh());
+
         return response()->json($file, 201);
     }
 

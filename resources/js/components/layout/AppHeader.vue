@@ -1,8 +1,16 @@
 <template>
   <header class="app-header sticky top-0 z-10 flex items-center justify-between gap-4 px-4 md:px-6">
     <div class="flex items-center gap-3 min-w-0">
-      <button @click="$emit('toggle-sidebar')" class="icon-btn md:hidden">
-        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      <button
+        type="button"
+        class="icon-btn sidebar-toggle"
+        aria-controls="app-sidebar"
+        :aria-expanded="props.sidebarOpen"
+        :aria-label="props.sidebarOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'"
+        @click="emit('toggle-sidebar')"
+      >
+        <svg v-if="props.sidebarOpen" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        <svg v-else class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
       </button>
 
       <div class="min-w-0">
@@ -13,10 +21,23 @@
     <div class="flex items-center gap-2 md:gap-3">
       <SearchBar class="hidden md:block w-56 lg:w-80" />
 
-      <button class="icon-btn relative">
-        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-        <span class="notif-dot"></span>
-      </button>
+      <div ref="notifMenuContainerRef" class="relative">
+        <button
+          type="button"
+          class="icon-btn relative"
+          :aria-expanded="notifMenuOpen"
+          aria-haspopup="dialog"
+          :aria-label="notifStore.unreadCount ? `Notifikasi, ${notifStore.unreadCount} belum dibaca` : 'Notifikasi'"
+          @click="toggleNotifMenu"
+        >
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <span v-if="notifStore.hasUnread" class="notif-badge">{{ notifStore.badgeLabel }}</span>
+        </button>
+
+        <transition name="fade">
+          <NotificationPanel v-if="notifMenuOpen" @close="notifMenuOpen = false" />
+        </transition>
+      </div>
 
       <div ref="profileMenuContainerRef" class="relative">
         <button
@@ -57,13 +78,24 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
+import { useNotificationStore } from '../../stores/notifications';
+import { addToast } from '../ui/Toast.vue';
 import SearchBar from '../ui/SearchBar.vue';
+import NotificationPanel from '../ui/NotificationPanel.vue';
+
+const props = defineProps({
+  sidebarOpen: { type: Boolean, default: false },
+});
+const emit = defineEmits(['toggle-sidebar']);
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+const notifStore = useNotificationStore();
 const profileMenuOpen = ref(false);
 const profileMenuContainerRef = ref(null);
+const notifMenuOpen = ref(false);
+const notifMenuContainerRef = ref(null);
 
 const routeLabels = {
   Dashboard: 'Ringkasan',
@@ -87,18 +119,49 @@ const userInitials = computed(() => {
   return name.substring(0, 2).toUpperCase();
 });
 
-const closeMenu = () => { profileMenuOpen.value = false; };
+const toggleNotifMenu = () => {
+  notifMenuOpen.value = !notifMenuOpen.value;
+  if (notifMenuOpen.value) profileMenuOpen.value = false;
+};
 
 const onClickOutside = (event) => {
   if (profileMenuOpen.value && profileMenuContainerRef.value && !profileMenuContainerRef.value.contains(event.target)) {
-    closeMenu();
+    profileMenuOpen.value = false;
+  }
+  if (notifMenuOpen.value && notifMenuContainerRef.value && !notifMenuContainerRef.value.contains(event.target)) {
+    notifMenuOpen.value = false;
   }
 };
 
-onMounted(() => document.addEventListener('click', onClickOutside));
-onUnmounted(() => document.removeEventListener('click', onClickOutside));
+const onEscape = (event) => {
+  if (event.key !== 'Escape') return;
+  profileMenuOpen.value = false;
+  notifMenuOpen.value = false;
+};
+
+onMounted(() => {
+  document.addEventListener('click', onClickOutside);
+  document.addEventListener('keydown', onEscape);
+
+  // Tidak ada websocket di stack ini (BROADCAST_CONNECTION=log), jadi badge
+  // disegarkan lewat polling ringan yang hanya mengambil jumlah belum dibaca.
+  notifStore.startPolling((delta) => {
+    addToast({
+      type: 'info',
+      title: 'Notifikasi baru',
+      message: delta === 1 ? 'Anda punya 1 notifikasi baru.' : `Anda punya ${delta} notifikasi baru.`,
+    });
+  });
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', onClickOutside);
+  document.removeEventListener('keydown', onEscape);
+  notifStore.stopPolling();
+});
 
 const logout = async () => {
+  notifStore.reset();
   await authStore.logout();
   router.push('/login');
 };
@@ -131,15 +194,34 @@ const logout = async () => {
 .icon-btn:hover { background: var(--fill-secondary); color: var(--accent-primary); }
 .icon-btn:active { transform: scale(.94); }
 
-.notif-dot {
+/*
+  Jangan pakai utility md:hidden di sini: .icon-btn (di app.css maupun scoped
+  style ini) menyetel display tanpa @layer, jadi selalu menang atas .hidden
+  milik Tailwind. Visibilitasnya diatur eksplisit lewat media query.
+*/
+.sidebar-toggle { display: inline-flex; }
+@media (min-width: 768px) {
+  .sidebar-toggle { display: none; }
+}
+
+.notif-badge {
   position: absolute;
-  top: 0.4rem;
-  right: 0.4rem;
-  width: 0.42rem;
-  height: 0.42rem;
-  border-radius: 50%;
+  top: -0.1rem;
+  right: -0.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.05rem;
+  height: 1.05rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
   background: var(--accent-danger);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
   box-shadow: 0 0 0 2px #f9f9fb;
+  pointer-events: none;
 }
 
 .profile-btn {

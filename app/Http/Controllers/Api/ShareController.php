@@ -7,10 +7,11 @@ use App\Http\Requests\ShareRequest;
 use App\Http\Requests\CreateShareLinkRequest;
 use App\Services\SharingService;
 use App\Services\ActivityService;
+use App\Services\NotificationService;
 use App\Models\File;
 use App\Models\Folder;
+use App\Models\Share;
 use App\Models\ShareLink;
-use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -18,18 +19,25 @@ class ShareController extends Controller
 {
     protected $sharingService;
     protected $activityService;
+    protected NotificationService $notificationService;
 
-    public function __construct(SharingService $sharingService, ActivityService $activityService)
-    {
+    public function __construct(
+        SharingService $sharingService,
+        ActivityService $activityService,
+        NotificationService $notificationService
+    ) {
         $this->sharingService = $sharingService;
         $this->activityService = $activityService;
+        $this->notificationService = $notificationService;
     }
 
     public function store(ShareRequest $request)
     {
-        $shareable = $request->shareable_type === 'file' 
-            ? File::findOrFail($request->shareable_id) 
-            : Folder::findOrFail($request->shareable_id);
+        $shareable = $this->resolveOwnedShareable($request->shareable_type, $request->shareable_id, $request->user());
+
+        if ((int) $request->shared_to === $request->user()->id) {
+            return response()->json(['message' => 'Anda tidak bisa membagikan item kepada diri sendiri.'], 422);
+        }
 
         $share = $this->sharingService->shareWithUser(
             $shareable, 
@@ -38,16 +46,11 @@ class ShareController extends Controller
             $request->permission
         );
 
-        Notification::create([
-            'user_id' => $request->shared_to,
-            'type' => 'share',
-            'title' => 'New item shared with you',
-            'message' => $request->user()->name . ' shared an item with you.',
-        ]);
+        $this->notificationService->shareReceived($share, $request->user(), $shareable);
 
         $this->activityService->log($request->user()->id, 'shared', $shareable);
 
-        return response()->json($share, 201);
+        return response()->json($share->load('sharedTo:id,name,email'), 201);
     }
 
     public function index(Request $request)
@@ -56,11 +59,48 @@ class ShareController extends Controller
         return response()->json($shares);
     }
 
+    /**
+     * Daftar orang yang sudah punya akses ke sebuah item, dipakai modal "Bagikan".
+     * Hanya pemilik item atau admin yang boleh melihatnya.
+     */
+    public function itemShares(Request $request, string $type, $id)
+    {
+        $shareable = $this->resolveOwnedShareable($type, $id, $request->user());
+        $shareableType = get_class($shareable);
+
+        return response()->json([
+            'shares' => $this->sharingService->getSharesForItem($shareableType, $shareable->id),
+            'links' => $this->sharingService->getLinksForItem($shareableType, $shareable->id),
+        ]);
+    }
+
+    /**
+     * Cari calon penerima berdasarkan nama/email untuk pemilih di modal "Bagikan".
+     */
+    public function searchRecipients(Request $request)
+    {
+        $request->validate(['q' => 'nullable|string|max:100']);
+
+        return response()->json(
+            $this->sharingService->searchRecipients($request->user()->id, $request->q)
+        );
+    }
+
+    public function updatePermission(Request $request, $id)
+    {
+        $request->validate(['permission' => 'required|in:view,edit']);
+
+        $share = Share::findOrFail($id);
+        $this->authorizeShareManagement($share, $request->user());
+
+        $share = $this->sharingService->updatePermission($share->id, $request->permission);
+
+        return response()->json($share->load('sharedTo:id,name,email'));
+    }
+
     public function createLink(CreateShareLinkRequest $request)
     {
-        $shareable = $request->shareable_type === 'file' 
-            ? File::findOrFail($request->shareable_id) 
-            : Folder::findOrFail($request->shareable_id);
+        $shareable = $this->resolveOwnedShareable($request->shareable_type, $request->shareable_id, $request->user());
 
         $link = $this->sharingService->createPublicLink(
             $shareable,
@@ -69,13 +109,66 @@ class ShareController extends Controller
             $request->expires_at
         );
 
+        $this->activityService->log($request->user()->id, 'created_share_link', $shareable);
+
         return response()->json($link, 201);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        $this->sharingService->revokeShare($id);
+        $share = Share::with('shareable')->findOrFail($id);
+        $this->authorizeShareManagement($share, $request->user());
+
+        $this->notificationService->shareRevoked($share, $request->user(), $share->shareable);
+        $this->sharingService->revokeShare($share->id);
+
         return response()->json(['message' => 'Share revoked']);
+    }
+
+    public function destroyLink(Request $request, $id)
+    {
+        $link = ShareLink::with('shareable')->findOrFail($id);
+
+        if ($link->created_by !== $request->user()->id && !$request->user()->isAdmin()) {
+            abort(403, 'Anda tidak berhak menghapus tautan ini.');
+        }
+
+        $link->delete();
+
+        return response()->json(['message' => 'Tautan dihapus']);
+    }
+
+    /**
+     * Ambil file/folder berdasarkan tipe+id dan pastikan pengguna yang login
+     * adalah pemiliknya (atau admin). Hanya pemilik yang boleh membagikan item.
+     */
+    protected function resolveOwnedShareable(string $type, int $id, $user): File|Folder
+    {
+        $shareable = $type === 'file' ? File::findOrFail($id) : Folder::findOrFail($id);
+
+        if ($shareable->user_id !== $user->id && !$user->isAdmin()) {
+            abort(403, 'Anda hanya bisa membagikan item milik Anda sendiri.');
+        }
+
+        return $shareable;
+    }
+
+    /**
+     * Hanya yang membagikan (shared_by), pemilik item, atau admin yang boleh
+     * mengubah permission atau mencabut sebuah share.
+     */
+    protected function authorizeShareManagement(Share $share, $user): void
+    {
+        if ($user->isAdmin() || $share->shared_by === $user->id) {
+            return;
+        }
+
+        $shareable = $share->shareable;
+        if ($shareable && $shareable->user_id === $user->id) {
+            return;
+        }
+
+        abort(403, 'Anda tidak berhak mengelola akses berbagi ini.');
     }
 
     public function accessLink(Request $request, $token)

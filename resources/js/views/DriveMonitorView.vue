@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full h-full flex flex-col gap-4">
+  <div class="monitor-page">
     <div class="page-header">
       <div>
         <h1>
@@ -10,17 +10,18 @@
       </div>
     </div>
 
-    <div class="glass-card flex-1 overflow-hidden flex flex-col md:flex-row">
+    <div class="glass-card monitor-body">
       <!-- User list panel -->
-      <div class="user-panel" :class="{ 'md:hidden': selectedUser }">
-        <div class="p-3 border-b border-glass-border">
-          <div class="relative">
-            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input v-model="userSearch" type="text" placeholder="Cari pengguna..." class="form-control form-control-sm pl-9 bg-black/20 w-full">
+      <div class="user-panel" :class="{ 'is-collapsed': selectedUser }">
+        <div class="panel-toolbar">
+          <div class="search-field">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input v-model="userSearch" type="text" placeholder="Cari pengguna..." class="form-control form-control-sm pl-9 w-full">
           </div>
+          <span class="panel-count">{{ filteredUsers.length }} pengguna</span>
         </div>
 
-        <div class="flex-1 overflow-y-auto">
+        <div class="panel-scroll">
           <div v-if="loadingUsers" class="p-6 flex justify-center">
             <svg class="w-6 h-6 text-primary animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
           </div>
@@ -39,9 +40,9 @@
               <div class="font-medium text-primary truncate text-sm">{{ u.name }}</div>
               <div class="text-xs text-secondary truncate">{{ u.roles?.[0]?.name || 'Tanpa Peran' }}</div>
             </div>
-            <div class="text-right flex-shrink-0">
-              <div class="text-xs text-secondary">{{ u.files_count }} file</div>
-              <div class="text-[10px] text-muted">{{ formatSize(u.storage_used) }}</div>
+            <div class="user-meta">
+              <span class="text-xs text-secondary">{{ u.files_count }} file</span>
+              <span class="text-[10px] text-muted">{{ formatSize(u.storage_used) }}</span>
             </div>
           </button>
 
@@ -52,10 +53,10 @@
       </div>
 
       <!-- Drive content panel -->
-      <div class="flex-1 flex flex-col min-w-0" :class="{ 'md:flex': true, 'hidden': !selectedUser }">
+      <div class="content-panel" :class="{ 'is-active': selectedUser }">
         <template v-if="selectedUser">
-          <div class="p-3 border-b border-glass-border flex items-center gap-3">
-            <button class="btn-icon text-secondary hover:text-primary md:hidden" @click="selectedUser = null">
+          <div class="content-toolbar">
+            <button class="btn-icon back-btn" @click="selectedUser = null">
               <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             </button>
             <div class="min-w-0 flex-1">
@@ -69,16 +70,16 @@
           </div>
 
           <!-- Breadcrumbs -->
-          <div class="flex items-center gap-2 text-sm text-secondary font-medium px-3 py-2 overflow-x-auto border-b border-glass-border">
-            <button class="hover:text-primary transition-colors flex items-center gap-1 flex-shrink-0" @click="navigateToFolder(null)">
+          <div class="breadcrumbs">
+            <button class="crumb" @click="navigateToFolder(null)">
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
               Root
             </button>
             <template v-for="(crumb, idx) in breadcrumbs" :key="crumb.id">
-              <span class="flex-shrink-0">/</span>
+              <span class="crumb-sep">/</span>
               <button
-                class="hover:text-primary transition-colors truncate max-w-[140px] flex-shrink-0"
-                :class="{ 'text-primary': idx === breadcrumbs.length - 1 }"
+                class="crumb"
+                :class="{ 'is-current': idx === breadcrumbs.length - 1 }"
                 @click="navigateToFolder(crumb.id)"
               >
                 {{ crumb.name }}
@@ -86,16 +87,17 @@
             </template>
           </div>
 
-          <div class="flex-1 overflow-y-auto p-4 relative">
-            <div v-if="loadingContents" class="h-full flex items-center justify-center">
-              <svg class="w-8 h-8 text-primary animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+          <div class="content-scroll">
+            <div v-if="loadingContents" class="panel-state">
+              <svg class="w-8 h-8 animate-spin" style="color: var(--accent-primary)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
             </div>
 
-            <EmptyState
-              v-else-if="folders.length === 0 && files.length === 0"
-              title="Folder ini kosong"
-              description="Pengguna ini belum menyimpan apa pun di folder ini."
-            />
+            <div v-else-if="folders.length === 0 && files.length === 0" class="panel-state">
+              <EmptyState
+                title="Folder ini kosong"
+                description="Pengguna ini belum menyimpan apa pun di folder ini."
+              />
+            </div>
 
             <template v-else>
               <template v-if="folders.length">
@@ -136,7 +138,7 @@
           </div>
         </template>
 
-        <div v-else class="flex-1 hidden md:flex items-center justify-center">
+        <div v-else class="panel-state">
           <EmptyState
             title="Pilih pengguna"
             description="Pilih salah satu pengguna di panel kiri untuk melihat isi drive mereka."
@@ -271,13 +273,39 @@ onMounted(fetchUsers);
 </script>
 
 <style scoped>
-.user-panel { width: 100%; display: flex; flex-direction: column; border-right: 1px solid var(--separator); background: rgba(249,249,251,.7); }
-@media (min-width: 768px) { .user-panel { width: 290px; flex-shrink: 0; } }
+.monitor-page { display: flex; flex-direction: column; gap: 1rem; min-height: 100%; }
+/* page-header punya margin-bottom global; di sini spacing diatur oleh gap. */
+.monitor-page .page-header { margin-bottom: 0; }
+
+.monitor-body { flex: 1; display: flex; flex-direction: column; min-height: 420px; overflow: hidden; }
+
+/* --- Panel daftar pengguna --- */
+.user-panel { display: flex; flex-direction: column; min-height: 0; border-bottom: 1px solid var(--separator); background: rgba(249, 249, 251, .7); }
+.panel-toolbar { display: flex; align-items: center; gap: .75rem; padding: .75rem; border-bottom: 1px solid var(--separator); }
+.search-field { position: relative; flex: 1; min-width: 0; }
+.search-icon { position: absolute; left: .7rem; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-muted); pointer-events: none; }
+.panel-count { flex-shrink: 0; font-size: .72rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+.panel-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+
 .user-row { width: 100%; display: flex; align-items: center; gap: .65rem; min-height: 58px; padding: .65rem .85rem; background: none; border: none; border-left: 3px solid transparent; cursor: pointer; transition: background .15s ease; text-align: left; }
 .user-row:hover { background: var(--fill-tertiary); }
-.user-row.active { background: rgba(0,122,255,.10); border-left-color: var(--accent-primary); }
+.user-row.active { background: rgba(0, 122, 255, .10); border-left-color: var(--accent-primary); }
+.user-meta { display: flex; flex-direction: column; align-items: flex-end; gap: .1rem; flex-shrink: 0; }
 
-.section-label { font-size: .72rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); margin-bottom: .8rem; }
+/* --- Panel isi drive --- */
+.content-panel { display: none; flex: 1; flex-direction: column; min-width: 0; min-height: 0; }
+.content-panel.is-active { display: flex; }
+.content-toolbar { display: flex; align-items: center; gap: .75rem; padding: .75rem; border-bottom: 1px solid var(--separator); }
+.content-scroll { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; padding: 1rem; }
+.panel-state { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1.5rem 1rem; }
+
+.breadcrumbs { display: flex; align-items: center; gap: .4rem; padding: .55rem .75rem; overflow-x: auto; border-bottom: 1px solid var(--separator); font-size: .8125rem; font-weight: 500; }
+.crumb { display: inline-flex; align-items: center; gap: .3rem; flex-shrink: 0; max-width: 160px; padding: .2rem .45rem; border: 0; border-radius: 7px; background: none; color: var(--text-secondary); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color .15s ease, background .15s ease; }
+.crumb svg { width: 15px; height: 15px; flex-shrink: 0; }
+.crumb:hover { color: var(--accent-primary); background: var(--fill-secondary); }
+.crumb.is-current { color: var(--text-primary); font-weight: 600; }
+.crumb-sep { flex-shrink: 0; color: var(--text-muted); }
+
 .content-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
 @media (min-width: 768px) { .content-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 1024px) { .content-grid { grid-template-columns: repeat(4, 1fr); } }
@@ -294,4 +322,19 @@ onMounted(fetchUsers);
 .grid-in-enter-active { transition: opacity .4s ease, transform .4s cubic-bezier(.2,.8,.2,1); transition-delay: var(--d, 0ms); }
 .grid-in-enter-from { opacity: 0; transform: translateY(12px); }
 @media (prefers-reduced-motion: reduce) { .grid-in-enter-active { transition: none; } }
+
+/* Mobile: satu panel sekaligus, panel pengguna disembunyikan saat drive dibuka. */
+@media (max-width: 767px) {
+  .user-panel { flex: 1; min-height: 0; }
+  .user-panel.is-collapsed { display: none; }
+}
+
+/* Desktop: dua panel berdampingan, tombol kembali tidak diperlukan. */
+@media (min-width: 768px) {
+  .monitor-body { flex-direction: row; }
+  .user-panel { flex: 0 0 300px; border-bottom: 0; border-right: 1px solid var(--separator); }
+  .user-panel.is-collapsed { display: flex; }
+  .content-panel { display: flex; }
+  .back-btn { display: none; }
+}
 </style>

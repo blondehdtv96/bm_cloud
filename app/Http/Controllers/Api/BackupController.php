@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Backup;
 use App\Services\ActivityService;
 use App\Services\BackupService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class BackupController extends Controller
@@ -22,7 +23,7 @@ class BackupController extends Controller
         return response()->json(Backup::with('createdBy')->latest()->paginate(20));
     }
 
-    public function store(Request $request, ActivityService $activityService)
+    public function store(Request $request, ActivityService $activityService, NotificationService $notificationService)
     {
         $backup = $this->backupService->create($request->user()->id, 'manual');
 
@@ -32,6 +33,9 @@ class BackupController extends Controller
             $backup,
             ['filename' => $backup->name, 'status' => $backup->status]
         );
+
+        // Admin lain diberi tahu; pemicunya sudah melihat hasilnya langsung di UI.
+        $notificationService->backupFinished($backup, $request->user()->id);
 
         if ($backup->status === 'failed') {
             return response()->json([

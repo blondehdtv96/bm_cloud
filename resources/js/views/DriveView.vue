@@ -106,7 +106,7 @@
       <template v-else>
         <!-- Folder Grid -->
         <template v-if="folders.length">
-          <h3 class="text-sm font-semibold text-secondary uppercase tracking-wider mb-3">Folder</h3>
+          <h3 class="section-label">Folder</h3>
           <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
             <div
               v-for="folder in folders"
@@ -116,6 +116,9 @@
             >
               <svg class="w-8 h-8 text-yellow-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
               <span class="text-sm font-medium truncate flex-1">{{ folder.name }}</span>
+              <button class="btn-icon text-secondary hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" @click.stop="openShare(folder, 'folder')" title="Bagikan">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+              </button>
               <button class="btn-icon text-secondary hover:text-danger opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" @click.stop="deleteFolder(folder)" title="Hapus">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
               </button>
@@ -125,7 +128,7 @@
 
         <!-- File Grid / List -->
         <template v-if="files.length">
-          <h3 class="text-sm font-semibold text-secondary uppercase tracking-wider mb-3">File</h3>
+          <h3 class="section-label">File</h3>
           <div v-if="viewMode === 'grid'" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             <div
               v-for="file in files"
@@ -136,6 +139,9 @@
               <div class="h-24 rounded-lg bg-black/30 mb-3 flex items-center justify-center text-indigo-400 group-hover:scale-105 transition-transform relative">
                 <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 <div class="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button class="btn-icon text-secondary hover:text-primary bg-black/40" @click.stop="openShare(file, 'file')" title="Bagikan">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                  </button>
                   <button class="btn-icon text-secondary hover:text-primary bg-black/40" @click.stop="downloadFile(file)" title="Unduh">
                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                   </button>
@@ -170,6 +176,9 @@
                 <td class="text-secondary hidden md:table-cell">{{ formatDate(file.updated_at) }}</td>
                 <td class="text-right">
                   <div class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button class="btn-icon text-secondary hover:text-primary" @click.stop="openShare(file, 'file')" title="Bagikan">
+                      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                    </button>
                     <button class="btn-icon text-secondary hover:text-primary" @click.stop="downloadFile(file)" title="Unduh">
                       <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     </button>
@@ -192,6 +201,9 @@
       @close="closePreview"
       @download="downloadFile"
     />
+
+    <!-- Share Modal -->
+    <ShareModal :visible="shareVisible" :item="shareItem" @close="shareVisible = false" />
 
     <!-- New Folder Modal -->
     <Modal :visible="showNewFolderModal" title="Buat Folder Baru" size="sm" @close="closeNewFolderModal">
@@ -227,6 +239,7 @@ import { addToast } from '../components/ui/Toast.vue';
 import Modal from '../components/ui/Modal.vue';
 import EmptyState from '../components/ui/EmptyState.vue';
 import FilePreviewModal from '../components/ui/FilePreviewModal.vue';
+import ShareModal from '../components/ui/ShareModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -261,6 +274,19 @@ const openPreview = (file) => {
 };
 const closePreview = () => {
   previewVisible.value = false;
+};
+
+// ----- Share -----
+const shareVisible = ref(false);
+const shareItem = ref(null);
+
+const openShare = (entity, type) => {
+  shareItem.value = {
+    id: entity.id,
+    type,
+    name: type === 'folder' ? entity.name : entity.original_name,
+  };
+  shareVisible.value = true;
 };
 
 const fetchContents = async () => {

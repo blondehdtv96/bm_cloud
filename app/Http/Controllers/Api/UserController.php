@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -29,7 +30,7 @@ class UserController extends Controller
         return response()->json($query->orderBy('name')->paginate(15));
     }
 
-    public function store(StoreUserRequest $request)
+    public function store(StoreUserRequest $request, NotificationService $notificationService)
     {
         $user = User::create([
             'name' => $request->name,
@@ -41,7 +42,9 @@ class UserController extends Controller
         ]);
         
         $user->roles()->attach($request->role_id);
-        
+
+        $notificationService->accountCreated($user, $request->user());
+
         return response()->json($user->load('roles'), 201);
     }
 

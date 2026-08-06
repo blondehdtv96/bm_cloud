@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -27,7 +26,6 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
   background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
   color: var(--text-primary);
   min-height: 100vh;
@@ -272,45 +270,11 @@ select.form-control option {
 .slide-fade-leave-active { transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1); }
 .slide-fade-enter-from, .slide-fade-leave-to { transform: translateX(20px); opacity: 0; }
 
-/* Utilities */
-.flex { display: flex; }
-.flex-col { flex-direction: column; }
-.items-center { align-items: center; }
-.justify-between { justify-content: space-between; }
-.justify-center { justify-content: center; }
-.gap-2 { gap: 0.5rem; }
-.gap-4 { gap: 1rem; }
-.p-4 { padding: 1rem; }
-.p-6 { padding: 1.5rem; }
-.m-4 { margin: 1rem; }
-.mt-4 { margin-top: 1rem; }
-.mb-4 { margin-bottom: 1rem; }
-.w-full { width: 100%; }
-.h-full { height: 100%; }
-.text-center { text-align: center; }
-.text-sm { font-size: 0.875rem; }
-.text-lg { font-size: 1.125rem; }
-.text-xl { font-size: 1.25rem; }
-.font-semibold { font-weight: 600; }
-.font-bold { font-weight: 700; }
-.rounded-lg { border-radius: 0.5rem; }
-.rounded-xl { border-radius: 1rem; }
-.rounded-full { border-radius: 9999px; }
-.relative { position: relative; }
-.absolute { position: absolute; }
-.hidden { display: none; }
-.grid { display: grid; }
-.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.cursor-pointer { cursor: pointer; }
-
-@media (min-width: 768px) {
-  .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-@media (min-width: 1024px) {
-  .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .lg\:grid-cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-}
+/* NOTE: Jangan mendeklarasikan ulang utility Tailwind (.flex, .hidden, .p-4, ...)
+   di file ini. Aturan tanpa @layer selalu mengalahkan utility Tailwind yang
+   berada di dalam layer, termasuk varian responsif seperti md:flex-row, sehingga
+   layout responsif jadi rusak. Pakai utility Tailwind langsung, atau buat kelas
+   semantik dengan nama sendiri. */
 
 /* ========================================================================== 
    BM Cloud iOS 16 Design System
@@ -338,7 +302,10 @@ select.form-control option {
   --accent-danger: #ff3b30;
   --text-primary: #1c1c1e;
   --text-secondary: #636366;
-  --text-muted: #8e8e93;
+  /* #8e8e93 (iOS tertiaryLabel) hanya ~3:1 di atas latar terang aplikasi ini,
+     di bawah ambang WCAG AA 4.5:1 untuk teks kecil. Digelapkan supaya label
+     redup (placeholder, ukuran file, timestamp) tetap terbaca. */
+  --text-muted: #6e6e73;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 28px rgba(0, 0, 0, 0.06);
   --shadow-popover: 0 18px 50px rgba(0, 0, 0, 0.16), 0 2px 8px rgba(0, 0, 0, 0.08);
   --radius-control: 10px;
@@ -411,8 +378,10 @@ p { color: var(--text-secondary); }
 .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
 .btn-primary { background: var(--accent-primary); color: #fff; box-shadow: 0 4px 12px rgba(0, 122, 255, .18); }
 .btn-primary:hover { background: #006ee6; box-shadow: 0 4px 14px rgba(0, 122, 255, .24); transform: none; }
-.btn-secondary { background: var(--bg-secondary); border-color: var(--separator); color: var(--accent-primary); }
-.btn-secondary:hover { background: var(--fill-tertiary); }
+/* Tinted, bukan putih-di-atas-putih: perlu terlihat sebagai tombol di atas
+   .glass-card yang warnanya juga hampir putih. */
+.btn-secondary { background: rgba(0, 122, 255, .08); border-color: rgba(0, 122, 255, .18); color: var(--accent-primary); }
+.btn-secondary:hover { background: rgba(0, 122, 255, .13); border-color: rgba(0, 122, 255, .3); }
 .btn-danger { background: var(--accent-danger); color: #fff; }
 .btn-danger:hover { background: #e6352b; }
 .btn-icon, .icon-btn {
@@ -450,21 +419,34 @@ p { color: var(--text-secondary); }
 .form-control::placeholder { color: var(--text-muted); }
 .form-control:disabled { background: var(--fill-tertiary); color: var(--text-muted); opacity: 1; }
 .form-control-sm { min-height: 38px; padding: .5rem .75rem; border-radius: 9px; }
+/* Padding untuk input yang punya ikon di dalamnya. Ditulis dengan dua kelas agar
+   spesifisitasnya mengalahkan .form-control / .form-control-sm di atas. */
+.form-control.pl-9 { padding-left: 2.25rem; }
+.form-control.pl-10 { padding-left: 2.5rem; }
+.form-control.pr-9 { padding-right: 2.25rem; }
+.form-control.pr-10 { padding-right: 2.5rem; }
 select.form-control { background-color: var(--bg-secondary); }
 select.form-control option { background: var(--bg-secondary); color: var(--text-primary); }
 textarea.form-control { min-height: 96px; }
 
-.alert-error {
+.alert-error,
+.alert-warning,
+.alert-info {
   display: flex;
   align-items: flex-start;
   gap: .6rem;
   padding: .75rem .9rem;
-  border: 1px solid rgba(255, 59, 48, .24);
+  border: 1px solid transparent;
   border-radius: 12px;
-  background: rgba(255, 59, 48, .08);
-  color: #d70015;
   font-size: .85rem;
+  line-height: 1.45;
 }
+.alert-error { border-color: rgba(255, 59, 48, .24); background: rgba(255, 59, 48, .08); color: #d70015; }
+.alert-warning { border-color: rgba(255, 149, 0, .26); background: rgba(255, 149, 0, .10); color: #96500a; }
+.alert-info { border-color: rgba(0, 122, 255, .22); background: rgba(0, 122, 255, .08); color: #0062cc; }
+.alert-error svg,
+.alert-warning svg,
+.alert-info svg { flex-shrink: 0; width: 18px; height: 18px; margin-top: .1rem; }
 
 .badge { padding: .3rem .62rem; border-radius: 999px; font-size: .72rem; font-weight: 600; border: 0; }
 .badge-indigo, .badge-purple { background: rgba(0, 122, 255, .10); color: #0066d6; }
@@ -476,6 +458,16 @@ textarea.form-control { min-height: 96px; }
 .page-header { gap: .75rem; margin-bottom: 1.5rem; }
 .page-header h1 { font-size: clamp(1.35rem, 2vw, 1.7rem); font-weight: 700; letter-spacing: -.025em; }
 .page-header p { margin-top: .25rem; font-size: .875rem; }
+
+/* Label eyebrow kecil di atas grup konten (contoh: "Folder", "File" di Drive). */
+.section-label {
+  margin-bottom: .8rem;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
 
 .table-modern { background: transparent; }
 .table-modern thead th {

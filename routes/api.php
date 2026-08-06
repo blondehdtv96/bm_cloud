@@ -42,7 +42,11 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::apiResource('shares', ShareController::class)->only(['index', 'destroy']);
     Route::post('shares', [ShareController::class, 'store'])->middleware('permission:shares.create');
+    Route::get('shares/recipients', [ShareController::class, 'searchRecipients']);
+    Route::get('shares/item/{type}/{id}', [ShareController::class, 'itemShares']);
+    Route::put('shares/{id}', [ShareController::class, 'updatePermission']);
     Route::post('shares/link', [ShareController::class, 'createLink'])->middleware('permission:shares.create');
+    Route::delete('shares/link/{id}', [ShareController::class, 'destroyLink']);
     
     Route::get('favorites', [FavoriteController::class, 'index']);
     Route::post('favorites/toggle', [FavoriteController::class, 'toggle']);
@@ -56,8 +60,10 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
-    Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('notifications/read-all', [NotificationController::class, 'markAllRead']);
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::delete('notifications', [NotificationController::class, 'destroyAll']);
+    Route::delete('notifications/{id}', [NotificationController::class, 'destroy']);
     
     Route::get('search', [SearchController::class, 'search']);
 

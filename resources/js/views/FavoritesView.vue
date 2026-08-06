@@ -114,9 +114,9 @@ const fetchFavorites = async () => {
 
 const toggleFavorite = async (item) => {
   try {
-    await api.post('/favorites/toggle', { 
-      type: item.type,
-      id: item.id
+    await api.post('/favorites/toggle', {
+      favoritable_type: item.type,
+      favoritable_id: item.id
     });
     // Optimistic UI update
     favorites.value = favorites.value.filter(f => !(f.id === item.id && f.type === item.type));
