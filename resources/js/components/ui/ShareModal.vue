@@ -244,30 +244,35 @@ const close = () => emit('close');
   height: 32px;
   flex-shrink: 0;
   border-radius: 8px;
-  background: rgba(0, 122, 255, .10);
+  background: rgba(26, 115, 232, .10);
   color: var(--accent-primary);
 }
 .share-target-icon svg { width: 16px; height: 16px; }
-.share-target-icon.is-folder { background: rgba(255, 149, 0, .13); color: var(--accent-warning); }
+.share-target-icon.is-folder { background: rgba(249, 171, 0, .13); color: var(--accent-warning); }
 .share-target-name { font-weight: 600; font-size: .875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .recipient-search { position: relative; display: flex; gap: .5rem; }
 .recipient-search .form-control:first-child { flex: 1; }
 .permission-select { flex-shrink: 0; width: 6.5rem; }
 
+/*
+  Sengaja BUKAN overlay position:absolute: .modal-body induk memakai
+  overflow-y:auto, yang membuat overflow-x ikut jadi auto (aturan CSS
+  overflow), sehingga dropdown absolute bisa terpotong/tidak bisa diklik saat
+  modal-body sedang di-scroll. Ditulis sebagai blok inline yang mendorong
+  konten di bawahnya supaya selalu utuh terlihat dan bisa diklik.
+*/
 .recipient-results {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: calc(100% + .3rem);
+  position: relative;
   z-index: 5;
+  margin-top: .4rem;
   max-height: 14rem;
   overflow-y: auto;
   padding: .3rem;
   border: 1px solid var(--separator);
   border-radius: 12px;
   background: var(--bg-secondary);
-  box-shadow: var(--shadow-popover);
+  box-shadow: var(--shadow-card);
 }
 .recipient-hint { padding: .6rem .5rem; font-size: .8rem; color: var(--text-muted); text-align: center; }
 .recipient-option {
@@ -323,5 +328,5 @@ const close = () => emit('close');
 .shared-name { font-size: .82rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .shared-email { font-size: .74rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .perm-select { flex-shrink: 0; width: 6rem; min-height: 34px; padding: .35rem .5rem; }
-.shared-remove:hover:not(:disabled) { color: var(--accent-danger); background: rgba(255, 59, 48, .10); }
+.shared-remove:hover:not(:disabled) { color: var(--accent-danger); background: rgba(217, 48, 37, .10); }
 </style>

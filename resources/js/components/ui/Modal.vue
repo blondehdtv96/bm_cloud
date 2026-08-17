@@ -41,8 +41,8 @@ watch(() => props.visible, (visible) => {
 
 <style scoped>
 .modal-root { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
-.modal-backdrop { position: absolute; inset: 0; background: rgba(28, 28, 30, .36); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
-.modal-sheet { position: relative; width: 100%; max-height: min(82vh, 760px); display: flex; flex-direction: column; overflow: hidden; background: rgba(255,255,255,.96); border: 1px solid var(--separator); border-radius: var(--radius-sheet); box-shadow: var(--shadow-popover); animation: modal-in .22s cubic-bezier(.2,.8,.2,1); }
+.modal-backdrop { position: absolute; inset: 0; background: rgba(32, 33, 36, .55); }
+.modal-sheet { position: relative; width: 100%; max-height: min(82vh, 760px); display: flex; flex-direction: column; overflow: hidden; background: var(--bg-secondary); border: 1px solid var(--separator); border-radius: var(--radius-card); box-shadow: var(--shadow-popover); animation: modal-in .22s cubic-bezier(.2,.8,.2,1); }
 .modal-sm { max-width: 24rem; }
 .modal-md { max-width: 32rem; }
 .modal-lg { max-width: 42rem; }
@@ -52,7 +52,7 @@ watch(() => props.visible, (visible) => {
 .modal-close { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 50%; color: var(--text-secondary); background: var(--fill-secondary); cursor: pointer; }
 .modal-close:hover { color: var(--text-primary); background: var(--fill-primary); }
 .modal-body { padding: 1.25rem; overflow-y: auto; }
-.modal-footer { display: flex; justify-content: flex-end; gap: .65rem; padding: .8rem 1rem; border-top: 1px solid var(--separator); background: rgba(249,249,251,.92); }
+.modal-footer { display: flex; justify-content: flex-end; gap: .65rem; padding: .8rem 1rem; border-top: 1px solid var(--separator); background: var(--fill-tertiary); }
 @keyframes modal-in { from { opacity: 0; transform: scale(.97) translateY(8px); } to { opacity: 1; transform: none; } }
 @media (max-width: 640px) {
   .modal-root { align-items: flex-end; padding: 0; }

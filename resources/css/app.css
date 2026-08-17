@@ -276,47 +276,50 @@ select.form-control option {
    layout responsif jadi rusak. Pakai utility Tailwind langsung, atau buat kelas
    semantik dengan nama sendiri. */
 
-/* ========================================================================== 
-   BM Cloud iOS 16 Design System
+/* ==========================================================================
+   BM Cloud Design System — Drive-inspired Material palette
+   Flat white surfaces, subtle 1px borders, Google-blue accent, pill buttons.
    This layer is authoritative and intentionally keeps legacy utility aliases
    working while every screen migrates to semantic components.
    ========================================================================== */
 :root {
   color-scheme: light;
-  --bg-primary: #f2f2f7;
+  --bg-primary: #f8f9fa;
   --bg-secondary: #ffffff;
-  --bg-tertiary: #e5e5ea;
-  --bg-card: rgba(255, 255, 255, 0.88);
-  --bg-card-hover: #f8f8fa;
-  --glass-border: rgba(60, 60, 67, 0.18);
-  --separator: rgba(60, 60, 67, 0.18);
-  --separator-opaque: #c6c6c8;
-  --fill-primary: rgba(120, 120, 128, 0.20);
-  --fill-secondary: rgba(120, 120, 128, 0.12);
-  --fill-tertiary: rgba(118, 118, 128, 0.08);
-  --accent-primary: #007aff;
-  --accent-secondary: #5856d6;
-  --accent-tertiary: #32ade6;
-  --accent-success: #34c759;
-  --accent-warning: #ff9500;
-  --accent-danger: #ff3b30;
-  --text-primary: #1c1c1e;
-  --text-secondary: #636366;
-  /* #8e8e93 (iOS tertiaryLabel) hanya ~3:1 di atas latar terang aplikasi ini,
-     di bawah ambang WCAG AA 4.5:1 untuk teks kecil. Digelapkan supaya label
-     redup (placeholder, ukuran file, timestamp) tetap terbaca. */
-  --text-muted: #6e6e73;
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 28px rgba(0, 0, 0, 0.06);
-  --shadow-popover: 0 18px 50px rgba(0, 0, 0, 0.16), 0 2px 8px rgba(0, 0, 0, 0.08);
-  --radius-control: 10px;
-  --radius-card: 16px;
+  --bg-tertiary: #f1f3f4;
+  --bg-card: #ffffff;
+  --bg-card-hover: #ffffff;
+  --glass-border: #dadce0;
+  --separator: #e0e3e7;
+  --separator-opaque: #dadce0;
+  --fill-primary: rgba(60, 64, 67, 0.16);
+  --fill-secondary: #f1f3f4;
+  --fill-tertiary: #f8f9fa;
+  --accent-primary: #1a73e8;
+  --accent-primary-hover: #1765cc;
+  --accent-primary-active: #185abc;
+  --accent-tint: #e8f0fe;
+  --accent-secondary: #669df6;
+  --accent-tertiary: #12b5cb;
+  --accent-success: #1e8e3e;
+  --accent-warning: #f9ab00;
+  --accent-danger: #d93025;
+  --text-primary: #202124;
+  --text-secondary: #5f6368;
+  --text-muted: #70757a;
+  --shadow-card: 0 1px 2px 0 rgba(60, 64, 67, .08), 0 1px 3px 1px rgba(60, 64, 67, .06);
+  --shadow-hover: 0 1px 3px 0 rgba(60, 64, 67, .16), 0 4px 8px 3px rgba(60, 64, 67, .1);
+  --shadow-popover: 0 4px 8px 3px rgba(60, 64, 67, .15), 0 1px 3px rgba(60, 64, 67, .3);
+  --radius-control: 8px;
+  --radius-button: 999px;
+  --radius-card: 12px;
   --radius-sheet: 20px;
 }
 
 html { background: var(--bg-primary); }
 body {
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", sans-serif;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
   background: var(--bg-primary);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
@@ -324,33 +327,29 @@ body {
 }
 button, input, select, textarea { font: inherit; }
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
-  outline: 3px solid rgba(0, 122, 255, 0.22);
+  outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
 }
-::selection { background: rgba(0, 122, 255, 0.20); }
-::-webkit-scrollbar { width: 8px; height: 8px; }
+::selection { background: var(--accent-tint); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(60, 60, 67, 0.28); border: 2px solid transparent; background-clip: padding-box; border-radius: 999px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(60, 60, 67, 0.42); border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb { background: #dadce0; border: 3px solid transparent; background-clip: padding-box; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #bdc1c6; border: 3px solid transparent; background-clip: padding-box; }
 
 .glass-card {
-  background: var(--bg-card);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  backdrop-filter: saturate(180%) blur(20px);
+  background: var(--bg-secondary);
   border: 1px solid var(--separator);
   border-radius: var(--radius-card);
-  box-shadow: var(--shadow-card);
-  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+  box-shadow: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
-.glass-card:hover { background: var(--bg-card); }
+.glass-card:hover { background: var(--bg-secondary); }
 .glass-panel {
-  background: rgba(249, 249, 251, 0.88);
-  -webkit-backdrop-filter: saturate(180%) blur(24px);
-  backdrop-filter: saturate(180%) blur(24px);
+  background: var(--bg-secondary);
   border-right: 1px solid var(--separator);
 }
 
-h1, h2, h3, h4, h5, h6 { color: var(--text-primary); letter-spacing: -0.018em; }
+h1, h2, h3, h4, h5, h6 { color: var(--text-primary); font-weight: 500; letter-spacing: 0; }
 p { color: var(--text-secondary); }
 .text-primary { color: var(--text-primary); }
 .text-secondary { color: var(--text-secondary); }
@@ -364,26 +363,26 @@ p { color: var(--text-secondary); }
 
 .btn {
   min-height: 44px;
-  padding: .62rem 1rem;
-  border-radius: var(--radius-control);
+  padding: .62rem 1.15rem;
+  border-radius: var(--radius-button);
   font-size: .875rem;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1;
   border: 1px solid transparent;
   box-shadow: none;
-  transition: filter .15s ease, background .15s ease, border-color .15s ease, transform .1s ease;
+  transition: background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .1s ease;
   -webkit-tap-highlight-color: transparent;
 }
 .btn:active:not(:disabled) { transform: scale(.98); }
 .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
-.btn-primary { background: var(--accent-primary); color: #fff; box-shadow: 0 4px 12px rgba(0, 122, 255, .18); }
-.btn-primary:hover { background: #006ee6; box-shadow: 0 4px 14px rgba(0, 122, 255, .24); transform: none; }
-/* Tinted, bukan putih-di-atas-putih: perlu terlihat sebagai tombol di atas
-   .glass-card yang warnanya juga hampir putih. */
-.btn-secondary { background: rgba(0, 122, 255, .08); border-color: rgba(0, 122, 255, .18); color: var(--accent-primary); }
-.btn-secondary:hover { background: rgba(0, 122, 255, .13); border-color: rgba(0, 122, 255, .3); }
+.btn-primary { background: var(--accent-primary); color: #fff; box-shadow: var(--shadow-card); }
+.btn-primary:hover { background: var(--accent-primary-hover); box-shadow: var(--shadow-hover); transform: none; }
+.btn-primary:active:not(:disabled) { background: var(--accent-primary-active); }
+/* Outlined, Material-style secondary action. */
+.btn-secondary { background: var(--bg-secondary); border-color: var(--separator-opaque); color: var(--accent-primary); }
+.btn-secondary:hover { background: var(--accent-tint); border-color: var(--accent-primary); }
 .btn-danger { background: var(--accent-danger); color: #fff; }
-.btn-danger:hover { background: #e6352b; }
+.btn-danger:hover { background: #b3261e; }
 .btn-icon, .icon-btn {
   display: inline-flex;
   align-items: center;
@@ -403,7 +402,7 @@ p { color: var(--text-secondary); }
 .btn-icon:disabled { opacity: .35; cursor: not-allowed; }
 
 .form-group { margin-bottom: 1rem; }
-.form-label { margin-bottom: .45rem; color: var(--text-secondary); font-size: .8125rem; font-weight: 600; }
+.form-label { margin-bottom: .45rem; color: var(--text-secondary); font-size: .8125rem; font-weight: 500; }
 .form-control {
   min-height: 44px;
   padding: .68rem .85rem;
@@ -411,14 +410,14 @@ p { color: var(--text-secondary); }
   background: var(--bg-secondary);
   border: 1px solid var(--separator-opaque);
   color: var(--text-primary);
-  box-shadow: 0 1px 1px rgba(0,0,0,.02);
+  box-shadow: none;
   transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
 }
-.form-control:hover:not(:disabled) { border-color: rgba(60, 60, 67, .36); }
-.form-control:focus { outline: 0; border-color: var(--accent-primary); box-shadow: 0 0 0 3px rgba(0, 122, 255, .14); }
+.form-control:hover:not(:disabled) { border-color: #b0b4b9; }
+.form-control:focus { outline: 0; border-color: var(--accent-primary); box-shadow: 0 0 0 1px var(--accent-primary); }
 .form-control::placeholder { color: var(--text-muted); }
 .form-control:disabled { background: var(--fill-tertiary); color: var(--text-muted); opacity: 1; }
-.form-control-sm { min-height: 38px; padding: .5rem .75rem; border-radius: 9px; }
+.form-control-sm { min-height: 38px; padding: .5rem .75rem; border-radius: 8px; }
 /* Padding untuk input yang punya ikon di dalamnya. Ditulis dengan dua kelas agar
    spesifisitasnya mengalahkan .form-control / .form-control-sm di atas. */
 .form-control.pl-9 { padding-left: 2.25rem; }
@@ -437,26 +436,26 @@ textarea.form-control { min-height: 96px; }
   gap: .6rem;
   padding: .75rem .9rem;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: 8px;
   font-size: .85rem;
   line-height: 1.45;
 }
-.alert-error { border-color: rgba(255, 59, 48, .24); background: rgba(255, 59, 48, .08); color: #d70015; }
-.alert-warning { border-color: rgba(255, 149, 0, .26); background: rgba(255, 149, 0, .10); color: #96500a; }
-.alert-info { border-color: rgba(0, 122, 255, .22); background: rgba(0, 122, 255, .08); color: #0062cc; }
+.alert-error { border-color: #f6c6c2; background: #fce8e6; color: #b3261e; }
+.alert-warning { border-color: #fbdd9b; background: #fef7e0; color: #a35a00; }
+.alert-info { border-color: #c2dbfd; background: var(--accent-tint); color: #174ea6; }
 .alert-error svg,
 .alert-warning svg,
 .alert-info svg { flex-shrink: 0; width: 18px; height: 18px; margin-top: .1rem; }
 
 .badge { padding: .3rem .62rem; border-radius: 999px; font-size: .72rem; font-weight: 600; border: 0; }
-.badge-indigo, .badge-purple { background: rgba(0, 122, 255, .10); color: #0066d6; }
-.badge-emerald { background: rgba(52, 199, 89, .12); color: #248a3d; }
-.badge-amber { background: rgba(255, 149, 0, .13); color: #b25000; }
-.badge-red { background: rgba(255, 59, 48, .10); color: #d70015; }
+.badge-indigo, .badge-purple { background: var(--accent-tint); color: #174ea6; }
+.badge-emerald { background: #e6f4ea; color: #1e8e3e; }
+.badge-amber { background: #fef7e0; color: #a35a00; }
+.badge-red { background: #fce8e6; color: #b3261e; }
 .badge-slate { background: var(--fill-secondary); color: var(--text-secondary); }
 
 .page-header { gap: .75rem; margin-bottom: 1.5rem; }
-.page-header h1 { font-size: clamp(1.35rem, 2vw, 1.7rem); font-weight: 700; letter-spacing: -.025em; }
+.page-header h1 { font-size: clamp(1.3rem, 2vw, 1.55rem); font-weight: 500; letter-spacing: 0; }
 .page-header p { margin-top: .25rem; font-size: .875rem; }
 
 /* Label eyebrow kecil di atas grup konten (contoh: "Folder", "File" di Drive). */
@@ -471,16 +470,17 @@ textarea.form-control { min-height: 96px; }
 
 .table-modern { background: transparent; }
 .table-modern thead th {
-  background: rgba(242, 242, 247, .94);
+  background: var(--bg-secondary);
   color: var(--text-secondary);
-  font-size: .7rem;
-  letter-spacing: .045em;
-  padding: .8rem 1rem;
+  font-size: .72rem;
+  font-weight: 500;
+  letter-spacing: .02em;
+  padding: .7rem 1rem;
   border-bottom: 1px solid var(--separator);
   z-index: 1;
 }
-.table-modern tbody td { padding: .85rem 1rem; border-bottom-color: var(--separator); color: var(--text-primary); }
-.table-modern tbody tr:hover { background: var(--fill-tertiary); }
+.table-modern tbody td { padding: .8rem 1rem; border-bottom-color: var(--separator); color: var(--text-primary); }
+.table-modern tbody tr:hover { background: var(--fill-secondary); }
 
 /* Semantic surfaces and backwards-compatible Tailwind color aliases. */
 .bg-bg-secondary { background: var(--bg-secondary); }
@@ -489,26 +489,26 @@ textarea.form-control { min-height: 96px; }
 .hover\:bg-black\/30:hover, .hover\:bg-black\/80:hover, .hover\:bg-white\/5:hover { background: var(--fill-secondary); }
 .bg-white\/5 { background: var(--fill-tertiary); }
 .bg-indigo-500\/10, .bg-indigo-500\/15, .bg-indigo-500\/20, .bg-indigo-400\/20,
-.bg-purple-500\/15, .bg-purple-500\/20, .bg-blue-500\/15 { background: rgba(0, 122, 255, .10); }
+.bg-purple-500\/15, .bg-purple-500\/20, .bg-blue-500\/15 { background: var(--accent-tint); }
 .text-indigo-300, .text-indigo-400, .text-blue-400, .text-purple-400 { color: var(--accent-primary); }
 .text-cyan-400 { color: var(--accent-tertiary); }
 .text-emerald-400 { color: var(--accent-success); }
 .text-red-400 { color: var(--accent-danger); }
 .border-indigo-400, .border-indigo-500\/50, .border-primary { border-color: var(--accent-primary); }
 .bg-indigo-500, .bg-primary { background: var(--accent-primary); }
-.bg-primary\/20 { background: rgba(0, 122, 255, .10); }
+.bg-primary\/20 { background: var(--accent-tint); }
 .bg-accent-primary { background: var(--accent-primary); }
 .bg-accent-success, .border-accent-success { background-color: var(--accent-success); border-color: var(--accent-success); }
 .bg-accent-warning, .border-accent-warning { background-color: var(--accent-warning); border-color: var(--accent-warning); }
 .bg-accent-danger, .border-accent-danger { background-color: var(--accent-danger); border-color: var(--accent-danger); }
 .border-accent-primary { border-color: var(--accent-primary); }
-.from-indigo-500, .from-purple-500 { --tw-gradient-from: var(--accent-primary); --tw-gradient-to: rgb(0 122 255 / 0); }
-.to-purple-500, .to-purple-600, .to-pink-500 { --tw-gradient-to: #5ac8fa; }
+.from-indigo-500, .from-purple-500 { --tw-gradient-from: var(--accent-primary); --tw-gradient-to: rgb(26 115 232 / 0); }
+.to-purple-500, .to-purple-600, .to-pink-500 { --tw-gradient-to: var(--accent-secondary); }
 .hover\:-translate-y-1:hover { transform: none; }
 .group:hover .group-hover\:scale-105, .group:hover .group-hover\:scale-110 { transform: none; }
 .animate-spin.text-primary { color: var(--accent-primary); }
 
-/* Shared iOS progress and grouped-list treatments. */
+/* Shared progress and grouped-list treatments. */
 .progress-track { height: 6px; width: 100%; overflow: hidden; border-radius: 999px; background: var(--fill-primary); }
 .progress-bar { height: 100%; border-radius: inherit; background: var(--accent-primary); transition: width .25s ease; }
 .surface-row { background: var(--bg-secondary); border: 1px solid var(--separator); border-radius: 12px; }
@@ -520,7 +520,7 @@ textarea.form-control { min-height: 96px; }
 .slide-fade-enter-from, .slide-fade-leave-to { opacity: 0; transform: translateY(4px); }
 
 @media (max-width: 767px) {
-  .glass-card { border-radius: 14px; }
+  .glass-card { border-radius: 12px; }
   .page-header { margin-bottom: 1rem; }
   .table-modern thead th, .table-modern tbody td { padding-left: .75rem; padding-right: .75rem; }
 }

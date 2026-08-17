@@ -22,7 +22,30 @@
       <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
     </button>
 
-    <nav class="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-0.5">
+    <!-- Tombol "Baru": aksi utama, gaya CTA pill khas Drive. -->
+    <div class="new-btn-wrap" ref="newMenuRef">
+      <button type="button" class="new-btn" :aria-expanded="newMenuOpen" aria-haspopup="menu" title="Baru" @click="newMenuOpen = !newMenuOpen">
+        <span class="new-btn-icon">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </span>
+        <span class="new-btn-label">Baru</span>
+      </button>
+
+      <transition name="new-menu">
+        <div v-if="newMenuOpen" class="new-menu" role="menu">
+          <button type="button" class="new-menu-item" role="menuitem" @click="startNew('upload')">
+            <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            Unggah File
+          </button>
+          <button type="button" class="new-menu-item" role="menuitem" @click="startNew('folder')">
+            <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
+            Folder Baru
+          </button>
+        </div>
+      </transition>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto py-2 px-3 flex flex-col gap-0.5">
       <router-link to="/dashboard" class="nav-item" active-class="active" title="Dashboard" @click="$emit('navigate')">
         <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
         <span>Dashboard</span>
@@ -85,17 +108,37 @@
 </template>
 
 <script setup>
-import { useRoute } from 'vue-router';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 import StorageUsage from '../ui/StorageUsage.vue';
 
 defineProps({
   collapsed: { type: Boolean, default: false },
 });
-defineEmits(['navigate', 'toggle-collapse']);
+const emit = defineEmits(['navigate', 'toggle-collapse']);
 
 const route = useRoute();
+const router = useRouter();
 const authStore = useAuthStore();
+
+const newMenuOpen = ref(false);
+const newMenuRef = ref(null);
+
+const startNew = (action) => {
+  newMenuOpen.value = false;
+  router.push({ path: '/drive', query: { action } });
+  emit('navigate');
+};
+
+const onClickOutside = (event) => {
+  if (newMenuOpen.value && newMenuRef.value && !newMenuRef.value.contains(event.target)) {
+    newMenuOpen.value = false;
+  }
+};
+
+onMounted(() => document.addEventListener('click', onClickOutside));
+onUnmounted(() => document.removeEventListener('click', onClickOutside));
 </script>
 
 <style scoped>
@@ -107,9 +150,7 @@ const authStore = useAuthStore();
 }
 
 .glass-panel {
-  background: rgba(249, 249, 251, 0.9);
-  -webkit-backdrop-filter: saturate(180%) blur(24px);
-  backdrop-filter: saturate(180%) blur(24px);
+  background: var(--bg-secondary);
   border-right: 1px solid var(--separator);
 }
 
@@ -125,7 +166,6 @@ const authStore = useAuthStore();
   background: var(--accent-primary);
   color: #fff;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.18);
 }
 
 .logo-text { white-space: nowrap; transition: opacity .15s ease; }
@@ -144,17 +184,76 @@ const authStore = useAuthStore();
   border: 1px solid var(--separator);
   background: var(--bg-secondary);
   color: var(--text-secondary);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, .12);
+  box-shadow: var(--shadow-card);
   cursor: pointer;
   z-index: 5;
   transition: color .15s ease, border-color .15s ease, box-shadow .15s ease, transform .15s ease;
 }
-.collapse-toggle:hover { color: var(--accent-primary); border-color: rgba(0, 122, 255, .4); box-shadow: 0 3px 8px rgba(0, 0, 0, .16); }
+.collapse-toggle:hover { color: var(--accent-primary); border-color: var(--accent-primary); box-shadow: var(--shadow-hover); }
 .collapse-toggle:active { transform: scale(.92); }
 .collapse-toggle svg { transition: transform .25s ease; }
 
+/* Tombol Baru: CTA pill mengambang khas Drive. */
+.new-btn-wrap { position: relative; flex-shrink: 0; margin: .9rem .9rem .35rem; }
+.new-btn {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  width: 100%;
+  min-height: 44px;
+  padding: .5rem 1.1rem .5rem .65rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: .9rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--separator);
+  transition: box-shadow .15s ease, background .15s ease;
+}
+.new-btn:hover { box-shadow: var(--shadow-hover); background: var(--bg-secondary); }
+.new-btn:active { box-shadow: var(--shadow-card); }
+.new-btn-icon { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; color: var(--accent-primary); flex-shrink: 0; }
+.new-btn-label { white-space: nowrap; }
+
+.new-menu {
+  position: absolute;
+  left: 0;
+  top: calc(100% + .4rem);
+  z-index: 20;
+  width: 13rem;
+  padding: .4rem;
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--separator);
+  box-shadow: var(--shadow-popover);
+}
+.new-menu-item {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  width: 100%;
+  min-height: 40px;
+  padding: .5rem .65rem;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-primary);
+  font-size: .85rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.new-menu-item:hover { background: var(--fill-secondary); }
+.new-menu-item svg { color: var(--text-secondary); flex-shrink: 0; }
+.new-menu-enter-active, .new-menu-leave-active { transition: opacity .14s ease, transform .14s ease; }
+.new-menu-enter-from, .new-menu-leave-to { opacity: 0; transform: translateY(-4px) scale(.98); }
+
 .nav-section-label {
-  margin: 1rem 0.75rem 0.4rem;
+  margin: 1rem 1.05rem 0.4rem;
   padding-top: 0.8rem;
   border-top: 1px solid var(--separator);
   font-size: 0.68rem;
@@ -169,11 +268,12 @@ const authStore = useAuthStore();
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.9rem;
   min-height: 42px;
-  padding: 0.6rem 0.75rem;
+  padding: 0.6rem 1rem;
+  margin: 0 .3rem;
   color: var(--text-secondary);
-  border-radius: 10px;
+  border-radius: 999px;
   transition: background 0.15s ease, color 0.15s ease;
   font-weight: 500;
   font-size: 0.875rem;
@@ -187,16 +287,16 @@ const authStore = useAuthStore();
   color: var(--text-primary);
 }
 .nav-item.active {
-  background: rgba(0, 122, 255, 0.11);
-  color: var(--accent-primary);
-  font-weight: 600;
+  background: var(--accent-tint);
+  color: var(--accent-primary-active);
+  font-weight: 700;
 }
 
 .sidebar-footer { overflow: hidden; }
 
 @media (max-width: 767px) {
   .glass-panel {
-    box-shadow: 18px 0 50px rgba(0, 0, 0, 0.14);
+    box-shadow: var(--shadow-popover);
   }
 }
 
@@ -207,11 +307,14 @@ const authStore = useAuthStore();
   .is-collapsed .logo-text,
   .is-collapsed .nav-item span,
   .is-collapsed .nav-section-label,
-  .is-collapsed .sidebar-footer {
+  .is-collapsed .sidebar-footer,
+  .is-collapsed .new-btn-label {
     display: none;
   }
   .is-collapsed .sidebar-brand { justify-content: center; padding-left: 0; padding-right: 0; }
   .is-collapsed .nav-item { justify-content: center; padding-left: 0.5rem; padding-right: 0.5rem; }
+  .is-collapsed .new-btn-wrap { margin-left: .5rem; margin-right: .5rem; }
+  .is-collapsed .new-btn { justify-content: center; padding-left: .5rem; padding-right: .5rem; }
   .is-collapsed .collapse-toggle svg { transform: rotate(180deg); }
 }
 </style>

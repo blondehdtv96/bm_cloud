@@ -9,7 +9,7 @@
 
 <style scoped>
 .empty-state { width: 100%; height: 100%; min-height: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; text-align: center; }
-.empty-icon { width: 76px; height: 76px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.15rem; border-radius: 22px; color: var(--accent-primary); background: rgba(0,122,255,.09); }
+.empty-icon { width: 76px; height: 76px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.15rem; border-radius: 22px; color: var(--accent-primary); background: rgba(26, 115, 232,.09); }
 .empty-icon :deep(svg) { width: 36px; height: 36px; }
 h2 { margin-bottom: .35rem; font-size: 1.15rem; font-weight: 700; }
 p { max-width: 28rem; margin-bottom: 1.25rem; font-size: .875rem; }

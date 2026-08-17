@@ -165,7 +165,7 @@ onMounted(loadStats);
 @keyframes grow-bar { from { transform: scaleX(0); transform-origin: left; } to { transform: scaleX(1); transform-origin: left; } }
 
 .bar-blue { background: var(--accent-primary); }
-.bar-purple { background: #af52de; }
+.bar-purple { background: #a142f4; }
 .bar-teal { background: var(--accent-tertiary); }
 .bar-green { background: var(--accent-success); }
 .bar-amber { background: var(--accent-warning); }
@@ -177,10 +177,10 @@ onMounted(loadStats);
 .info-value { font-size: .82rem; font-weight: 600; color: var(--text-primary); }
 .info-ok { color: var(--accent-success); }
 
-.tone-blue { background: rgba(0,122,255,.12); color: var(--accent-primary); }
-.tone-purple { background: rgba(175,82,222,.13); color: #8944ab; }
-.tone-teal { background: rgba(50,173,230,.14); color: #0a84a8; }
-.tone-green { background: rgba(52,199,89,.14); color: #248a3d; }
+.tone-blue { background: rgba(26, 115, 232,.12); color: var(--accent-primary); }
+.tone-purple { background: rgba(161, 66, 244,.13); color: #8430ce; }
+.tone-teal { background: rgba(18, 181, 203,.14); color: #007b83; }
+.tone-green { background: rgba(30, 142, 62,.14); color: #1e8e3e; }
 
 .reveal { opacity: 0; animation: reveal-up .5s cubic-bezier(.2,.8,.2,1) forwards; animation-delay: var(--d, 0ms); }
 @keyframes reveal-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }

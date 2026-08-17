@@ -12,12 +12,12 @@
     </div>
 
     <div class="glass-card flex-1 overflow-hidden flex flex-col">
-      <div class="p-4 border-b border-glass-border flex flex-wrap gap-3">
+      <div class="p-4 border-b border-glass-border flex flex-col sm:flex-row flex-wrap gap-3">
         <div class="relative flex-1 min-w-[200px]">
           <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
           <input v-model="search" @input="debounceSearch" type="text" placeholder="Cari nama atau email..." class="form-control form-control-sm pl-9 bg-black/20 w-full">
         </div>
-        <select v-model="roleFilter" @change="fetchUsers" class="form-control form-control-sm bg-black/20 w-44">
+        <select v-model="roleFilter" @change="fetchUsers" class="form-control form-control-sm bg-black/20 w-full sm:w-44">
           <option value="">Semua Peran</option>
           <option v-for="role in roles" :key="role.id" :value="role.slug">{{ role.name }}</option>
         </select>
@@ -32,9 +32,9 @@
           <thead>
             <tr>
               <th>Pengguna</th>
-              <th>Peran</th>
-              <th>Penyimpanan</th>
-              <th>Status</th>
+              <th class="hidden md:table-cell">Peran</th>
+              <th class="hidden lg:table-cell">Penyimpanan</th>
+              <th class="hidden sm:table-cell">Status</th>
               <th class="text-right">Aksi</th>
             </tr>
           </thead>
@@ -46,13 +46,20 @@
                   <div class="min-w-0">
                     <div class="font-medium text-primary truncate">{{ u.name }}</div>
                     <div class="text-xs text-secondary truncate">{{ u.email }}</div>
+                    <div class="flex items-center gap-2 mt-1 md:hidden">
+                      <span class="badge badge-purple">{{ u.roles?.[0]?.name || '—' }}</span>
+                      <span class="badge" :class="statusBadgeClass(u.status)">
+                        <span class="w-1.5 h-1.5 rounded-full" :class="statusDotClass(u.status)"></span>
+                        {{ statusLabel(u.status) }}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </td>
-              <td>
+              <td class="hidden md:table-cell">
                 <span class="badge badge-purple">{{ u.roles?.[0]?.name || '—' }}</span>
               </td>
-              <td>
+              <td class="hidden lg:table-cell">
                 <div class="flex flex-col gap-1 w-28">
                   <span class="text-xs text-secondary">{{ formatSize(u.storage_used) }} / {{ formatSize(u.storage_quota) }}</span>
                   <div class="h-1.5 w-full bg-black/40 rounded-full overflow-hidden">
@@ -60,7 +67,7 @@
                   </div>
                 </div>
               </td>
-              <td>
+              <td class="hidden sm:table-cell">
                 <span class="badge" :class="statusBadgeClass(u.status)">
                   <span class="w-1.5 h-1.5 rounded-full" :class="statusDotClass(u.status)"></span>
                   {{ statusLabel(u.status) }}

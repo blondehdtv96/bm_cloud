@@ -92,14 +92,14 @@ onMounted(() => {
 .role-stack { display: flex; flex-direction: column; gap: 1.15rem; }
 
 .role-card { overflow: hidden; padding: 0; }
-.role-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.05rem 1.25rem; border-bottom: 1px solid var(--separator); background: rgba(249,249,251,.6); }
+.role-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.05rem 1.25rem; border-bottom: 1px solid var(--separator); background: var(--fill-tertiary); }
 .role-id { display: flex; align-items: center; gap: .8rem; min-width: 0; }
-.role-badge { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 12px; flex-shrink: 0; background: rgba(0,122,255,.11); color: var(--accent-primary); }
+.role-badge { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 12px; flex-shrink: 0; background: rgba(26, 115, 232,.11); color: var(--accent-primary); }
 .role-id h3 { font-size: 1.05rem; font-weight: 700; letter-spacing: -.02em; }
 .role-count { font-size: .75rem; color: var(--text-muted); }
 .role-actions { display: flex; gap: .35rem; flex-shrink: 0; }
 .btn-icon.danger { color: var(--accent-danger); }
-.btn-icon.danger:hover { background: rgba(255,59,48,.09); }
+.btn-icon.danger:hover { background: rgba(217, 48, 37,.09); }
 
 .role-body { padding: 1.1rem 1.25rem 1.25rem; }
 .perm-title { font-size: .72rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); margin-bottom: .9rem; }

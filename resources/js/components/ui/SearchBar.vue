@@ -37,22 +37,22 @@ const clear = () => {
 <style scoped>
 .search-input {
   width: 100%;
-  height: 2.35rem;
-  padding: 0 2.25rem;
-  border-radius: 10px;
+  height: 2.75rem;
+  padding: 0 2.5rem;
+  border-radius: 999px;
   background: var(--fill-secondary);
   border: 1px solid transparent;
   color: var(--text-primary);
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-family: inherit;
   transition: background 0.15s ease, border-color 0.15s ease, box-shadow .15s ease;
 }
 .search-input::placeholder { color: var(--text-muted); }
-.search-input:hover { background: var(--fill-primary); }
+.search-input:hover { background: #e8eaed; }
 .search-input:focus {
   outline: none;
   background: var(--bg-secondary);
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(0,122,255,0.12);
+  border-color: transparent;
+  box-shadow: 0 1px 2px 0 rgba(60,64,67,.16), 0 0 0 1.5px var(--accent-primary);
 }
 </style>

@@ -118,9 +118,7 @@ watch(() => route.fullPath, closeSidebar);
   position: fixed;
   inset: 0;
   z-index: 25;
-  background: rgba(0, 0, 0, .38);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
+  background: rgba(32, 33, 36, .5);
 }
 .overlay-enter-active, .overlay-leave-active { transition: opacity .2s ease; }
 .overlay-enter-from, .overlay-leave-to { opacity: 0; }

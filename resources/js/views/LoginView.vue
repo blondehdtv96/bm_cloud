@@ -161,7 +161,7 @@ const handleLogin = async () => {
   width: 45%;
   padding: clamp(2.5rem, 5vw, 4.5rem);
   overflow: hidden;
-  background: linear-gradient(155deg, #0a84ff 0%, #007aff 52%, #0062cc 100%);
+  background: linear-gradient(155deg, #4285f4 0%, #1a73e8 52%, #174ea6 100%);
   color: #fff;
 }
 .brand-panel::before, .brand-panel::after {
@@ -186,7 +186,7 @@ const handleLogin = async () => {
 .form-panel-inner { width: 100%; max-width: 410px; }
 .mobile-brand { display: flex; align-items: center; justify-content: center; gap: .55rem; color: var(--text-primary); font-weight: 700; font-size: 1.1rem; margin-bottom: 2rem; }
 .mobile-brand svg { color: var(--accent-primary); }
-.form-card { background: rgba(255,255,255,.92); border: 1px solid var(--separator); border-radius: 20px; padding: clamp(1.5rem, 4vw, 2rem); box-shadow: var(--shadow-card); }
+.form-card { background: var(--bg-secondary); border: 1px solid var(--separator); border-radius: 16px; padding: clamp(1.5rem, 4vw, 2rem); box-shadow: var(--shadow-hover); }
 .form-header { margin-bottom: 1.5rem; }
 .form-header h2 { font-size: 1.45rem; font-weight: 700; letter-spacing: -.025em; margin-bottom: .4rem; }
 .form-header p { font-size: .875rem; color: var(--text-secondary); margin: 0; }

@@ -186,21 +186,21 @@ watch(() => props.visible, (val) => {
 </script>
 
 <style scoped>
-.preview-overlay { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 1.5rem; background: rgba(28,28,30,.48); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
-.preview-shell { width: 100%; max-width: 960px; height: 85vh; display: flex; flex-direction: column; background: rgba(255,255,255,.97); border: 1px solid var(--separator); border-radius: 20px; overflow: hidden; box-shadow: var(--shadow-popover); }
-.preview-topbar { min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .7rem .85rem .7rem 1rem; border-bottom: 1px solid var(--separator); background: rgba(249,249,251,.9); flex-shrink: 0; }
+.preview-overlay { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 1.5rem; background: rgba(32,33,36,.6); }
+.preview-shell { width: 100%; max-width: 960px; height: 85vh; display: flex; flex-direction: column; background: var(--bg-secondary); border: 1px solid var(--separator); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-popover); }
+.preview-topbar { min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .7rem .85rem .7rem 1rem; border-bottom: 1px solid var(--separator); background: var(--bg-secondary); flex-shrink: 0; }
 .icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 999px; color: var(--accent-primary); background: transparent; border: none; cursor: pointer; transition: background .15s ease, transform .1s ease; }
 .icon-btn:hover { background: var(--fill-secondary); }
 .icon-btn:active { transform: scale(.94); }
 .file-icon-badge { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 8px; flex-shrink: 0; }
 .file-icon-badge.lg { width: 4.5rem; height: 4.5rem; border-radius: 18px; }
-.badge-pink { background: rgba(255,45,85,.11); color: #d30f45; }
-.badge-red { background: rgba(255,59,48,.10); color: #d70015; }
-.badge-purple { background: rgba(175,82,222,.11); color: #8944ab; }
-.badge-orange, .badge-amber { background: rgba(255,149,0,.12); color: #b25000; }
+.badge-pink { background: rgba(229, 37, 146,.11); color: #b80672; }
+.badge-red { background: rgba(217, 48, 37,.10); color: #b3261e; }
+.badge-purple { background: rgba(161, 66, 244,.11); color: #8430ce; }
+.badge-orange, .badge-amber { background: rgba(249, 171, 0,.12); color: #a35a00; }
 .badge-slate { background: var(--fill-secondary); color: var(--text-secondary); }
-.badge-emerald { background: rgba(52,199,89,.12); color: #248a3d; }
-.badge-indigo { background: rgba(0,122,255,.10); color: #0066d6; }
+.badge-emerald { background: rgba(30, 142, 62,.12); color: #1e8e3e; }
+.badge-indigo { background: rgba(26, 115, 232,.10); color: #174ea6; }
 .preview-body { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; background: #e9e9ee; overflow: auto; }
 .preview-state { display: flex; flex-direction: column; align-items: center; padding: 2rem; }
 .preview-media { width: 100%; height: 100%; }

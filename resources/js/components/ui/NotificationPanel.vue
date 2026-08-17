@@ -229,7 +229,7 @@ onMounted(() => {
 }
 .notif-link:hover { background: var(--fill-secondary); }
 .notif-link.danger { color: var(--accent-danger); }
-.notif-link.danger:hover { background: rgba(255, 59, 48, .09); }
+.notif-link.danger:hover { background: rgba(217, 48, 37, .09); }
 
 .notif-tabs {
   display: flex;
@@ -276,7 +276,7 @@ onMounted(() => {
   margin-bottom: .35rem;
   border-radius: 16px;
   color: var(--accent-primary);
-  background: rgba(0, 122, 255, .09);
+  background: rgba(26, 115, 232, .09);
 }
 .notif-empty-icon svg { width: 26px; height: 26px; }
 
@@ -284,8 +284,8 @@ onMounted(() => {
 
 .notif-item { position: relative; display: flex; align-items: stretch; border-radius: 11px; }
 .notif-item:hover { background: var(--fill-tertiary); }
-.notif-item.unread { background: rgba(0, 122, 255, .06); }
-.notif-item.unread:hover { background: rgba(0, 122, 255, .1); }
+.notif-item.unread { background: rgba(26, 115, 232, .06); }
+.notif-item.unread:hover { background: rgba(26, 115, 232, .1); }
 
 .notif-item-main {
   flex: 1;
@@ -311,11 +311,11 @@ onMounted(() => {
   border-radius: 10px;
 }
 .notif-icon :deep(svg) { width: 17px; height: 17px; }
-.tone-blue { color: var(--accent-primary); background: rgba(0, 122, 255, .10); }
-.tone-green { color: #248a3d; background: rgba(52, 199, 89, .12); }
-.tone-amber { color: #b25000; background: rgba(255, 149, 0, .13); }
-.tone-red { color: #d70015; background: rgba(255, 59, 48, .10); }
-.tone-purple { color: #5856d6; background: rgba(88, 86, 214, .12); }
+.tone-blue { color: var(--accent-primary); background: rgba(26, 115, 232, .10); }
+.tone-green { color: #1e8e3e; background: rgba(30, 142, 62, .12); }
+.tone-amber { color: #a35a00; background: rgba(249, 171, 0, .13); }
+.tone-red { color: #b3261e; background: rgba(217, 48, 37, .10); }
+.tone-purple { color: #8430ce; background: rgba(161, 66, 244, .12); }
 
 .notif-text { display: flex; flex-direction: column; gap: .1rem; min-width: 0; }
 .notif-item-title { font-size: .82rem; font-weight: 600; color: var(--text-primary); }
@@ -354,7 +354,7 @@ onMounted(() => {
 }
 .notif-remove svg { width: 15px; height: 15px; margin: 0 auto; }
 .notif-item:hover .notif-remove, .notif-remove:focus-visible { opacity: 1; }
-.notif-remove:hover { color: var(--accent-danger); background: rgba(255, 59, 48, .10); }
+.notif-remove:hover { color: var(--accent-danger); background: rgba(217, 48, 37, .10); }
 
 .notif-more {
   width: 100%;

@@ -197,11 +197,11 @@ onMounted(fetchShares);
   height: 34px;
   flex-shrink: 0;
   border-radius: 9px;
-  background: rgba(0, 122, 255, .10);
+  background: rgba(26, 115, 232, .10);
   color: var(--accent-primary);
 }
 .item-icon svg { width: 17px; height: 17px; }
-.item-icon.is-folder { background: rgba(255, 149, 0, .13); color: var(--accent-warning); }
+.item-icon.is-folder { background: rgba(249, 171, 0, .13); color: var(--accent-warning); }
 
 .item-text {
   display: flex;
@@ -256,7 +256,7 @@ onMounted(fetchShares);
   gap: .15rem;
 }
 
-.action-download:hover:not(:disabled) { color: var(--accent-primary); background: rgba(0, 122, 255, .10); }
+.action-download:hover:not(:disabled) { color: var(--accent-primary); background: rgba(26, 115, 232, .10); }
 
 @media (min-width: 768px) {
   .item-sub { display: none; }

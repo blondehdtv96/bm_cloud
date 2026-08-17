@@ -243,6 +243,6 @@ onMounted(fetchTrash);
   gap: .15rem;
 }
 
-.action-restore:hover:not(:disabled) { color: var(--accent-success); background: rgba(52, 199, 89, .12); }
-.action-delete:hover:not(:disabled) { color: var(--accent-danger); background: rgba(255, 59, 48, .10); }
+.action-restore:hover:not(:disabled) { color: var(--accent-success); background: rgba(30, 142, 62, .12); }
+.action-delete:hover:not(:disabled) { color: var(--accent-danger); background: rgba(217, 48, 37, .10); }
 </style>

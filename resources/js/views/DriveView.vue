@@ -107,19 +107,19 @@
         <!-- Folder Grid -->
         <template v-if="folders.length">
           <h3 class="section-label">Folder</h3>
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
             <div
               v-for="folder in folders"
               :key="'f' + folder.id"
-              class="p-4 rounded-xl border border-glass-border bg-black/20 hover:bg-black/30 transition-all cursor-pointer flex items-center gap-3 hover:-translate-y-1 group"
+              class="folder-tile group"
               @click="navigateToFolder(folder.id)"
             >
-              <svg class="w-8 h-8 text-yellow-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              <svg class="w-5 h-5 folder-glyph flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
               <span class="text-sm font-medium truncate flex-1">{{ folder.name }}</span>
-              <button class="btn-icon text-secondary hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" @click.stop="openShare(folder, 'folder')" title="Bagikan">
+              <button class="tile-action btn-icon text-secondary hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" @click.stop="openShare(folder, 'folder')" title="Bagikan">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
               </button>
-              <button class="btn-icon text-secondary hover:text-danger opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" @click.stop="deleteFolder(folder)" title="Hapus">
+              <button class="tile-action btn-icon text-secondary hover:text-danger opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" @click.stop="deleteFolder(folder)" title="Hapus">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
               </button>
             </div>
@@ -129,28 +129,28 @@
         <!-- File Grid / List -->
         <template v-if="files.length">
           <h3 class="section-label">File</h3>
-          <div v-if="viewMode === 'grid'" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div v-if="viewMode === 'grid'" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
             <div
               v-for="file in files"
               :key="'doc' + file.id"
-              class="p-3 rounded-xl border border-glass-border bg-black/10 hover:bg-black/30 transition-all cursor-pointer group flex flex-col hover:shadow-lg hover:border-indigo-500/50"
+              class="file-tile-card group"
               @click="openPreview(file)"
             >
-              <div class="h-24 rounded-lg bg-black/30 mb-3 flex items-center justify-center text-indigo-400 group-hover:scale-105 transition-transform relative">
-                <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                <div class="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button class="btn-icon text-secondary hover:text-primary bg-black/40" @click.stop="openShare(file, 'file')" title="Bagikan">
+              <div class="file-thumb">
+                <svg class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <div class="file-thumb-actions">
+                  <button class="btn-icon text-secondary hover:text-primary bg-white" @click.stop="openShare(file, 'file')" title="Bagikan">
                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
                   </button>
-                  <button class="btn-icon text-secondary hover:text-primary bg-black/40" @click.stop="downloadFile(file)" title="Unduh">
+                  <button class="btn-icon text-secondary hover:text-primary bg-white" @click.stop="downloadFile(file)" title="Unduh">
                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                   </button>
-                  <button class="btn-icon text-secondary hover:text-danger bg-black/40" @click.stop="deleteFile(file)" title="Hapus">
+                  <button class="btn-icon text-secondary hover:text-danger bg-white" @click.stop="deleteFile(file)" title="Hapus">
                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                   </button>
                 </div>
               </div>
-              <span class="text-sm font-medium truncate mb-1" :title="file.original_name">{{ file.original_name }}</span>
+              <span class="text-sm font-medium truncate mb-0.5" :title="file.original_name">{{ file.original_name }}</span>
               <span class="text-xs text-secondary">{{ file.formatted_size }}</span>
             </div>
           </div>
@@ -175,7 +175,7 @@
                 <td class="text-secondary hidden md:table-cell">{{ file.formatted_size }}</td>
                 <td class="text-secondary hidden md:table-cell">{{ formatDate(file.updated_at) }}</td>
                 <td class="text-right">
-                  <div class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div class="row-actions flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button class="btn-icon text-secondary hover:text-primary" @click.stop="openShare(file, 'file')" title="Bagikan">
                       <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
                     </button>
@@ -331,7 +331,21 @@ watch(() => route.params.folderId, (val) => {
   loadAll();
 });
 
-onMounted(loadAll);
+// Dipicu oleh tombol "Baru" di sidebar (router.push({ path: '/drive', query: { action } })).
+const applyQueryAction = () => {
+  const action = route.query.action;
+  if (!action) return;
+  if (action === 'upload') openFilePicker();
+  if (action === 'folder') showNewFolderModal.value = true;
+  router.replace({ path: route.path, query: {} });
+};
+
+watch(() => route.query.action, applyQueryAction);
+
+onMounted(() => {
+  loadAll();
+  applyQueryAction();
+});
 
 // ----- Upload -----
 const openFilePicker = () => fileInputRef.value?.click();
@@ -487,7 +501,68 @@ const formatDate = (dateString) => {
 .view-toggle { display: flex; align-items: center; gap: 2px; border: 0; border-radius: 9px; background: var(--fill-secondary); padding: 2px; }
 .view-toggle-btn { display: flex; align-items: center; justify-content: center; width: 34px; height: 32px; border-radius: 7px; color: var(--text-secondary); background: none; border: none; cursor: pointer; transition: background .15s ease, color .15s ease, box-shadow .15s ease; }
 .view-toggle-btn:hover { color: var(--text-primary); }
-.view-toggle-btn.active { background: var(--bg-secondary); color: var(--accent-primary); box-shadow: 0 1px 4px rgba(0,0,0,.10); }
+.view-toggle-btn.active { background: var(--bg-secondary); color: var(--accent-primary); box-shadow: var(--shadow-card); }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* Kartu folder ala Drive: baris kompak, ikon + nama, tanpa efek angkat. */
+.folder-tile {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .7rem .85rem;
+  border: 1px solid var(--separator);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+.folder-tile:hover { background: var(--fill-secondary); border-color: var(--separator-opaque); }
+.folder-glyph { color: #fbbc04; }
+
+/* Kartu file ala Drive: thumbnail di atas, nama + ukuran di bawah, terangkat saat hover. */
+.file-tile-card {
+  display: flex;
+  flex-direction: column;
+  padding: .6rem;
+  border: 1px solid var(--separator);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  cursor: pointer;
+  transition: box-shadow .15s ease, border-color .15s ease;
+}
+.file-tile-card:hover { box-shadow: var(--shadow-hover); border-color: var(--separator); }
+.file-thumb {
+  position: relative;
+  height: 6rem;
+  margin-bottom: .65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: var(--fill-secondary);
+  color: var(--accent-primary);
+}
+.file-thumb-actions {
+  position: absolute;
+  top: .35rem;
+  right: .35rem;
+  display: flex;
+  gap: .25rem;
+  opacity: 0;
+  transition: opacity .15s ease;
+}
+.file-tile-card:hover .file-thumb-actions,
+.file-thumb-actions:focus-within { opacity: 1; }
+.file-thumb-actions .btn-icon { width: 28px; height: 28px; box-shadow: var(--shadow-card); }
+
+/* Perangkat sentuh tidak punya :hover, jadi aksi (Bagikan/Unduh/Hapus) yang
+   sebelumnya hanya muncul saat hover harus selalu tampil di sana. */
+@media (hover: none) {
+  .tile-action,
+  .file-thumb-actions,
+  .row-actions {
+    opacity: 1;
+  }
+}
 </style>

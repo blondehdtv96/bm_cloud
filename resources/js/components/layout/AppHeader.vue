@@ -1,6 +1,6 @@
 <template>
-  <header class="app-header sticky top-0 z-10 flex items-center justify-between gap-4 px-4 md:px-6">
-    <div class="flex items-center gap-3 min-w-0">
+  <header class="app-header sticky top-0 z-10 flex items-center gap-4 px-4 md:px-6">
+    <div class="flex items-center gap-3 min-w-0 header-left">
       <button
         type="button"
         class="icon-btn sidebar-toggle"
@@ -18,9 +18,11 @@
       </div>
     </div>
 
-    <div class="flex items-center gap-2 md:gap-3">
-      <SearchBar class="hidden md:block w-56 lg:w-80" />
+    <div class="header-center">
+      <SearchBar class="hidden md:block header-search" />
+    </div>
 
+    <div class="flex items-center gap-2 md:gap-3 header-right">
       <div ref="notifMenuContainerRef" class="relative">
         <button
           type="button"
@@ -171,10 +173,17 @@ const logout = async () => {
 .app-header {
   height: 4rem;
   flex-shrink: 0;
-  background: rgba(249, 249, 251, 0.82);
-  -webkit-backdrop-filter: saturate(180%) blur(22px);
-  backdrop-filter: saturate(180%) blur(22px);
+  background: var(--bg-secondary);
   border-bottom: 1px solid var(--separator);
+}
+
+.header-left { flex: 1 1 0; }
+.header-right { flex: 1 1 0; justify-content: flex-end; }
+.header-center { display: none; }
+
+@media (min-width: 768px) {
+  .header-center { display: flex; justify-content: center; flex: 2 1 0; min-width: 0; }
+  .header-search { width: 100%; max-width: 34rem; }
 }
 
 .icon-btn {
@@ -220,7 +229,7 @@ const logout = async () => {
   font-size: 0.62rem;
   font-weight: 700;
   line-height: 1;
-  box-shadow: 0 0 0 2px #f9f9fb;
+  box-shadow: 0 0 0 2px var(--bg-secondary);
   pointer-events: none;
 }
 
@@ -282,7 +291,7 @@ const logout = async () => {
 }
 .profile-menu-item:hover { background: var(--fill-secondary); color: var(--accent-primary); }
 .profile-menu-item.danger { color: var(--accent-danger); }
-.profile-menu-item.danger:hover { background: rgba(255, 59, 48, 0.09); color: var(--accent-danger); }
+.profile-menu-item.danger:hover { background: #fce8e6; color: var(--accent-danger); }
 .profile-menu-divider { height: 1px; background: var(--separator); margin: 0.3rem 0; }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.15s ease, transform 0.15s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(-4px); }

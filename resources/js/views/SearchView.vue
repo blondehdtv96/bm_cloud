@@ -87,7 +87,7 @@
               <td class="text-secondary hidden md:table-cell truncate max-w-[150px]">{{ item.path || '/' }}</td>
               <td class="text-secondary hidden md:table-cell">{{ item.updated_at || 'Baru saja' }}</td>
               <td class="text-right">
-                <button class="btn-icon text-secondary hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity" @click.stop="openMenu(item)">
+                <button class="row-menu-btn btn-icon text-secondary hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity" @click.stop="openMenu(item)">
                   <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
                 </button>
               </td>
@@ -175,3 +175,11 @@ const openMenu = (item) => {
   console.log('Open menu for:', item.id);
 };
 </script>
+
+<style scoped>
+/* Perangkat sentuh tidak punya :hover, jadi tombol menu yang sebelumnya
+   hanya muncul saat hover harus selalu tampil di sana. */
+@media (hover: none) {
+  .row-menu-btn { opacity: 1; }
+}
+</style>
