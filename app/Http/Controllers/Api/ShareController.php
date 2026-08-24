@@ -60,6 +60,61 @@ class ShareController extends Controller
     }
 
     /**
+     * Isi (subfolder + file) dari sebuah folder yang dibagikan kepada pengguna,
+     * dipakai saat pengguna membuka folder di halaman "Dibagikan dengan Saya".
+     * Akses diwarisi dari folder induk yang dibagikan, sehingga subfolder di
+     * dalamnya juga bisa dibuka meski tidak dibagikan satu per satu.
+     */
+    public function folderContents(Request $request, $id)
+    {
+        $folder = Folder::findOrFail($id);
+        $this->authorizeFolderAccess($folder, $request->user());
+
+        $ownerId = $folder->user_id;
+
+        return response()->json([
+            'folder' => $folder,
+            'folders' => Folder::where('user_id', $ownerId)->where('parent_id', $folder->id)->get(),
+            'files' => File::where('user_id', $ownerId)->where('folder_id', $folder->id)->get(),
+        ]);
+    }
+
+    /**
+     * Breadcrumb untuk folder yang dibagikan. Berhenti di folder teratas yang
+     * benar-benar dibagikan ke pengguna, supaya struktur folder pemilik di
+     * atasnya (yang tidak dibagikan) tidak ikut terekspos.
+     */
+    public function folderTrail(Request $request, $id)
+    {
+        $folder = Folder::findOrFail($id);
+        $user = $request->user();
+        $this->authorizeFolderAccess($folder, $user);
+
+        $trail = [];
+        $current = $folder;
+        while ($current) {
+            array_unshift($trail, ['id' => $current->id, 'name' => $current->name]);
+
+            $isDirectlyShared = $current->shares()->where('shared_to', $user->id)->exists();
+            if ($isDirectlyShared || !$current->parent_id) {
+                break;
+            }
+            $current = Folder::find($current->parent_id);
+        }
+
+        return response()->json(['folder' => $folder, 'trail' => $trail]);
+    }
+
+    protected function authorizeFolderAccess(Folder $folder, $user): void
+    {
+        if ($folder->user_id === $user->id || $user->isAdmin() || $folder->isSharedWith($user)) {
+            return;
+        }
+
+        abort(403, 'Anda tidak memiliki akses ke folder ini.');
+    }
+
+    /**
      * Daftar orang yang sudah punya akses ke sebuah item, dipakai modal "Bagikan".
      * Hanya pemilik item atau admin yang boleh melihatnya.
      */

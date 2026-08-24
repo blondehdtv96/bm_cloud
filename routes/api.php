@@ -47,6 +47,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('shares/{id}', [ShareController::class, 'updatePermission']);
     Route::post('shares/link', [ShareController::class, 'createLink'])->middleware('permission:shares.create');
     Route::delete('shares/link/{id}', [ShareController::class, 'destroyLink']);
+    Route::get('shares/folders/{id}', [ShareController::class, 'folderContents']);
+    Route::get('shares/folders/{id}/trail', [ShareController::class, 'folderTrail']);
     
     Route::get('favorites', [FavoriteController::class, 'index']);
     Route::post('favorites/toggle', [FavoriteController::class, 'toggle']);

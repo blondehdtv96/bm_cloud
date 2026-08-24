@@ -42,8 +42,22 @@ class Folder extends Model
         return $this->morphMany(Favorite::class, 'favoritable');
     }
 
+    /**
+     * True if this folder (or any ancestor) has been shared with $user,
+     * so opening a subfolder of a shared folder inherits access.
+     */
     public function isSharedWith($user)
     {
-        return $this->shares()->where('shared_to', $user->id ?? $user)->exists();
+        $userId = $user->id ?? $user;
+
+        $folder = $this;
+        while ($folder) {
+            if ($folder->shares()->where('shared_to', $userId)->exists()) {
+                return true;
+            }
+            $folder = $folder->parent_id ? Folder::find($folder->parent_id) : null;
+        }
+
+        return false;
     }
 }

@@ -48,9 +48,16 @@ class File extends Model
         return $this->morphMany(Favorite::class, 'favoritable');
     }
 
+    /**
+     * True if this file is shared directly, or sits inside a folder shared with $user.
+     */
     public function isSharedWith($user)
     {
-        return $this->shares()->where('shared_to', $user->id ?? $user)->exists();
+        if ($this->shares()->where('shared_to', $user->id ?? $user)->exists()) {
+            return true;
+        }
+
+        return $this->folder ? $this->folder->isSharedWith($user) : false;
     }
 
     protected function formattedSize(): Attribute
