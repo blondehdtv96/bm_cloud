@@ -15,7 +15,7 @@
       <div class="p-4 border-b border-glass-border flex flex-col sm:flex-row flex-wrap gap-3">
         <div class="relative flex-1 min-w-[200px]">
           <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <input v-model="search" @input="debounceSearch" type="text" placeholder="Cari nama atau email..." class="form-control form-control-sm pl-9 bg-black/20 w-full">
+          <input v-model="search" @input="debounceSearch" type="text" placeholder="Cari nama atau username..." class="form-control form-control-sm pl-9 bg-black/20 w-full">
         </div>
         <select v-model="roleFilter" @change="fetchUsers" class="form-control form-control-sm bg-black/20 w-full sm:w-44">
           <option value="">Semua Peran</option>
@@ -45,7 +45,7 @@
                   <div class="w-9 h-9 rounded-full bg-indigo-500/15 text-indigo-400 flex items-center justify-center font-bold text-sm flex-shrink-0">{{ initials(u.name) }}</div>
                   <div class="min-w-0">
                     <div class="font-medium text-primary truncate">{{ u.name }}</div>
-                    <div class="text-xs text-secondary truncate">{{ u.email }}</div>
+                    <div class="text-xs text-secondary truncate">@{{ u.username }}</div>
                     <div class="flex items-center gap-2 mt-1 md:hidden">
                       <span class="badge badge-purple">{{ u.roles?.[0]?.name || '—' }}</span>
                       <span class="badge" :class="statusBadgeClass(u.status)">
@@ -114,6 +114,10 @@
           <input v-model="form.name" type="text" class="form-control" required>
         </div>
         <div class="form-group mb-0">
+          <label class="form-label">Username</label>
+          <input v-model.trim="form.username" type="text" class="form-control" autocomplete="off" required>
+        </div>
+        <div class="form-group mb-0">
           <label class="form-label">Email</label>
           <input v-model="form.email" type="email" class="form-control" required>
         </div>
@@ -173,6 +177,7 @@ const formError = ref('');
 
 const form = reactive({
   name: '',
+  username: '',
   email: '',
   password: '',
   role_id: '',
@@ -226,6 +231,7 @@ const goToPage = (page) => {
 
 const resetForm = () => {
   form.name = '';
+  form.username = '';
   form.email = '';
   form.password = '';
   form.role_id = '';
@@ -244,6 +250,7 @@ const openEditModal = (user) => {
   editingUser.value = user;
   formError.value = '';
   form.name = user.name;
+  form.username = user.username;
   form.email = user.email;
   form.password = '';
   form.role_id = user.roles?.[0]?.id || '';
@@ -259,6 +266,7 @@ const closeModal = () => {
 
 const validateForm = () => {
   if (!form.name.trim()) return 'Nama lengkap wajib diisi.';
+  if (!form.username.trim()) return 'Username wajib diisi.';
   if (!form.email.trim()) return 'Email wajib diisi.';
   if (!form.role_id) return 'Peran wajib dipilih.';
   if (!editingUser.value && !form.password) return 'Kata sandi wajib diisi untuk pengguna baru.';
@@ -278,6 +286,7 @@ const saveUser = async () => {
   try {
     const payload = {
       name: form.name,
+      username: form.username,
       email: form.email,
       role_id: form.role_id,
       status: form.status,

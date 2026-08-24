@@ -53,7 +53,7 @@
         <div class="form-card">
           <div class="form-header">
             <h2>Masuk ke akun Anda</h2>
-            <p>Gunakan email dan kata sandi yang terdaftar untuk melanjutkan.</p>
+            <p>Gunakan username dan kata sandi yang terdaftar untuk melanjutkan.</p>
           </div>
 
           <div v-if="error" class="alert-error">
@@ -63,17 +63,17 @@
 
           <form @submit.prevent="handleLogin" class="login-form" novalidate>
             <div class="form-group">
-              <label for="email" class="form-label">Email</label>
+              <label for="username" class="form-label">Username</label>
               <div class="input-wrap">
-                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 <input
-                  id="email"
-                  v-model.trim="form.email"
-                  type="email"
-                  autocomplete="email"
+                  id="username"
+                  v-model.trim="form.username"
+                  type="text"
+                  autocomplete="username"
                   required
                   class="form-control"
-                  placeholder="nama@smkbm.sch.id"
+                  placeholder="Masukkan username"
                 />
               </div>
             </div>
@@ -128,7 +128,7 @@ import { useAuthStore } from '../stores/auth';
 const router = useRouter();
 const authStore = useAuthStore();
 
-const form = reactive({ email: '', password: '' });
+const form = reactive({ username: '', password: '' });
 const showPassword = ref(false);
 const loading = ref(false);
 const error = ref('');
@@ -139,12 +139,12 @@ const handleLogin = async () => {
   loading.value = true;
   error.value = '';
 
-  const result = await authStore.login(form.email, form.password);
+  const result = await authStore.login(form.username, form.password);
 
   if (result.success) {
     router.push('/dashboard');
   } else {
-    error.value = result.message || 'Email atau kata sandi salah';
+    error.value = result.message || 'Username atau kata sandi salah';
   }
 
   loading.value = false;

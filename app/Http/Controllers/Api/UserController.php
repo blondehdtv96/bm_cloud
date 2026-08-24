@@ -19,6 +19,7 @@ class UserController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
+                  ->orWhere('username', 'like', '%' . $search . '%')
                   ->orWhere('email', 'like', '%' . $search . '%');
             });
         }
@@ -34,6 +35,7 @@ class UserController extends Controller
     {
         $user = User::create([
             'name' => $request->name,
+            'username' => $request->username,
             'email' => $request->email,
             'password' => bcrypt($request->password),
             'storage_quota' => $request->storage_quota ?? 10737418240, // default 10GB
@@ -57,7 +59,7 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
         
-        $data = $request->only(['name', 'email', 'storage_quota', 'status']);
+        $data = $request->only(['name', 'username', 'email', 'storage_quota', 'status']);
         if ($request->filled('password')) {
             $data['password'] = bcrypt($request->password);
         }

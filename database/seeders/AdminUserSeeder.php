@@ -15,6 +15,7 @@ class AdminUserSeeder extends Seeder
             ['email' => 'admin@smkbm.sch.id'],
             [
                 'name' => 'Administrator',
+                'username' => 'admin',
                 'password' => Hash::make('admin123'),
                 'storage_quota' => 10737418240, // 10GB
                 'email_verified_at' => now(),

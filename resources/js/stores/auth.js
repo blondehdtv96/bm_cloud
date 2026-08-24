@@ -47,10 +47,10 @@ export const useAuthStore = defineStore('auth', {
             this.initialized = true;
         },
         
-        async login(email, password) {
+        async login(username, password) {
             this.loading = true;
             try {
-                const response = await api.post('/login', { email, password });
+                const response = await api.post('/login', { username, password });
                 this.token = response.data.access_token;
                 this.user = response.data.user;
                 localStorage.setItem('bmclouds_token', this.token);
