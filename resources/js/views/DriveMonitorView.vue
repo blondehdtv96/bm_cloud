@@ -131,6 +131,7 @@
                     </div>
                     <span class="text-sm font-medium truncate mb-1" :title="file.original_name">{{ file.original_name }}</span>
                     <span class="text-xs text-secondary">{{ file.formatted_size }}</span>
+                    <span class="text-xs text-secondary truncate" :title="formatDateTime(file.created_at)">Diunggah {{ formatDateTime(file.created_at) }}</span>
                   </div>
                 </TransitionGroup>
               </template>
@@ -190,6 +191,17 @@ const formatSize = (bytes) => {
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return parseFloat((bytes / Math.pow(1024, i)).toFixed(1)) + ' ' + units[i];
+};
+
+const formatDateTime = (dateString) => {
+  if (!dateString) return '--';
+  return new Intl.DateTimeFormat('id-ID', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(dateString));
 };
 
 const fetchUsers = async () => {
