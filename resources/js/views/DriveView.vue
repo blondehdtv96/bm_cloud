@@ -152,6 +152,7 @@
               </div>
               <span class="text-sm font-medium truncate mb-0.5" :title="file.original_name">{{ file.original_name }}</span>
               <span class="text-xs text-secondary">{{ file.formatted_size }}</span>
+              <span class="text-xs text-secondary" :title="formatDateTime(file.created_at)">{{ formatDate(file.created_at) }}</span>
             </div>
           </div>
 
@@ -160,7 +161,7 @@
               <tr>
                 <th>Nama</th>
                 <th class="hidden md:table-cell">Ukuran</th>
-                <th class="hidden md:table-cell">Diubah</th>
+                <th class="hidden md:table-cell">Diunggah</th>
                 <th class="text-right">Aksi</th>
               </tr>
             </thead>
@@ -173,7 +174,7 @@
                   </div>
                 </td>
                 <td class="text-secondary hidden md:table-cell">{{ file.formatted_size }}</td>
-                <td class="text-secondary hidden md:table-cell">{{ formatDate(file.updated_at) }}</td>
+                <td class="text-secondary hidden md:table-cell">{{ formatDateTime(file.created_at) }}</td>
                 <td class="text-right">
                   <div class="row-actions flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button class="btn-icon text-secondary hover:text-primary" @click.stop="openShare(file, 'file')" title="Bagikan">
@@ -494,6 +495,17 @@ const deleteFile = async (file) => {
 const formatDate = (dateString) => {
   if (!dateString) return '--';
   return new Intl.DateTimeFormat('id-ID', { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(dateString));
+};
+
+const formatDateTime = (dateString) => {
+  if (!dateString) return '--';
+  return new Intl.DateTimeFormat('id-ID', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(dateString));
 };
 </script>
 
