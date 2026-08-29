@@ -59,17 +59,22 @@
         <div v-for="item in uploadQueue" :key="item.id" class="flex items-center gap-3 px-1">
           <svg v-if="item.status === 'done'" class="w-4 h-4 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
           <svg v-else-if="item.status === 'error'" class="w-4 h-4 text-red-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-          <svg v-else class="w-4 h-4 text-indigo-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          <svg v-else class="w-4 h-4 text-indigo-400 flex-shrink-0 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
           <div class="flex-1 min-w-0">
             <div class="flex justify-between text-xs mb-1">
               <span class="truncate max-w-[70%] font-medium" :class="item.status === 'error' ? 'text-danger' : 'text-primary'">{{ item.name }}</span>
-              <span class="text-secondary flex-shrink-0">{{ item.status === 'error' ? 'Gagal' : item.progress + '%' }}</span>
+              <span class="text-secondary flex-shrink-0">
+                {{ item.status === 'error' ? 'Gagal' : item.status === 'processing' ? 'Memproses…' : item.progress + '%' }}
+              </span>
             </div>
-            <div class="h-1.5 w-full bg-black/30 rounded-full overflow-hidden">
+            <div class="h-1.5 w-full bg-black/30 rounded-full overflow-hidden relative">
               <div
-                class="h-full rounded-full transition-all duration-200"
-                :class="item.status === 'error' ? 'bg-red-500' : (item.status === 'done' ? 'bg-emerald-500' : 'bg-indigo-500')"
-                :style="`width: ${item.progress}%`"
+                class="h-full rounded-full"
+                :class="[
+                  item.status === 'error' ? 'bg-red-500' : (item.status === 'done' ? 'bg-emerald-500' : 'bg-indigo-500 upload-bar-active'),
+                  item.status === 'processing' ? 'upload-bar-indeterminate' : 'transition-all duration-200',
+                ]"
+                :style="item.status === 'processing' ? '' : `width: ${item.progress}%`"
               ></div>
             </div>
           </div>
@@ -258,8 +263,8 @@ const isDragging = ref(false);
 let dragCounter = 0;
 
 const uploadQueue = ref([]);
-const activeUploadCount = computed(() => uploadQueue.value.filter(i => i.status === 'uploading').length);
-const allUploadsSettled = computed(() => uploadQueue.value.length > 0 && uploadQueue.value.every(i => i.status !== 'uploading'));
+const activeUploadCount = computed(() => uploadQueue.value.filter(i => i.status === 'uploading' || i.status === 'processing').length);
+const allUploadsSettled = computed(() => uploadQueue.value.length > 0 && uploadQueue.value.every(i => i.status !== 'uploading' && i.status !== 'processing'));
 
 const showNewFolderModal = ref(false);
 const newFolderName = ref('');
@@ -400,6 +405,9 @@ const uploadSingleFile = async (file, item) => {
       onUploadProgress: (evt) => {
         if (evt.total) {
           item.progress = Math.round((evt.loaded / evt.total) * 100);
+          // Data sudah selesai terkirim dari browser tapi server masih menyimpan
+          // & menghitung hash file besar, jadi tampilkan status memproses.
+          if (item.progress >= 100) item.status = 'processing';
         }
       },
     });
@@ -516,6 +524,38 @@ const formatDateTime = (dateString) => {
 .view-toggle-btn.active { background: var(--bg-secondary); color: var(--accent-primary); box-shadow: var(--shadow-card); }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* Efek shimmer bergerak di atas progress bar selama transfer berlangsung. */
+.upload-bar-active {
+  position: relative;
+  overflow: hidden;
+}
+.upload-bar-active::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .35), transparent);
+  animation: upload-shimmer 1.2s linear infinite;
+}
+@keyframes upload-shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Saat server masih menyimpan file (progress browser sudah 100%), tampilkan bar tak-tentu. */
+.upload-bar-indeterminate {
+  width: 40% !important;
+  animation: upload-indeterminate 1.1s ease-in-out infinite;
+}
+@keyframes upload-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .upload-bar-active::after,
+  .upload-bar-indeterminate { animation: none; }
+}
 
 /* Kartu folder ala Drive: baris kompak, ikon + nama, tanpa efek angkat. */
 .folder-tile {

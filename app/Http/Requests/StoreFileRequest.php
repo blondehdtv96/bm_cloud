@@ -10,7 +10,7 @@ class StoreFileRequest extends FormRequest
     public function rules()
     {
         return [
-            'file' => 'required|file|max:102400',
+            'file' => 'required|file|max:1048576',
             'folder_id' => 'nullable|exists:folders,id',
         ];
     }

@@ -41,7 +41,7 @@ class FileController extends Controller
      */
     public function uploadNewVersion(Request $request, $id)
     {
-        $request->validate(['file' => 'required|file|max:102400']);
+        $request->validate(['file' => 'required|file|max:1048576']);
 
         $file = File::where('user_id', $request->user()->id)->findOrFail($id);
         $file = $this->storageService->replace($file, $request->file('file'), $request->user()->id);
