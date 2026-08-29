@@ -322,11 +322,11 @@ onMounted(fetchUsers);
 @media (min-width: 768px) { .content-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 1024px) { .content-grid { grid-template-columns: repeat(4, 1fr); } }
 
-.folder-card { display: flex; align-items: center; gap: .65rem; padding: .7rem .85rem; background: var(--bg-secondary); border: 1px solid var(--separator); border-radius: 8px; cursor: pointer; transition: background .15s ease, border-color .15s ease; }
+.folder-card { display: flex; align-items: center; gap: .65rem; padding: .7rem .85rem; min-width: 0; background: var(--bg-secondary); border: 1px solid var(--separator); border-radius: 8px; cursor: pointer; transition: background .15s ease, border-color .15s ease; }
 .folder-card:hover { background: var(--fill-secondary); }
 .folder-glyph { color: #fbbc04; }
 
-.file-card { display: flex; flex-direction: column; padding: .6rem; background: var(--bg-secondary); border: 1px solid var(--separator); border-radius: 8px; cursor: pointer; transition: box-shadow .15s ease; }
+.file-card { display: flex; flex-direction: column; padding: .6rem; min-width: 0; background: var(--bg-secondary); border: 1px solid var(--separator); border-radius: 8px; cursor: pointer; transition: box-shadow .15s ease; }
 .file-card:hover { box-shadow: var(--shadow-hover); }
 .file-thumb { height: 6rem; display: flex; align-items: center; justify-content: center; margin-bottom: .65rem; border-radius: 6px; background: var(--fill-secondary); color: var(--accent-primary); }
 
