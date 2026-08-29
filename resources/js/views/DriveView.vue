@@ -77,6 +77,10 @@
                 :style="item.status === 'processing' ? '' : `width: ${item.progress}%`"
               ></div>
             </div>
+            <div v-if="item.status === 'error'" class="flex items-center justify-between gap-2 mt-1">
+              <span class="text-xs text-danger truncate" :title="item.errorMessage">{{ item.errorMessage }}</span>
+              <button type="button" class="text-xs font-semibold text-accent-primary hover:underline flex-shrink-0" @click="retryUpload(item)">Coba lagi</button>
+            </div>
           </div>
         </div>
       </div>
@@ -385,9 +389,11 @@ const uploadFiles = (fileList) => {
   fileList.forEach((file) => {
     const item = {
       id: uploadIdSeq++,
+      file,
       name: file.name,
       progress: 0,
       status: 'uploading',
+      errorMessage: '',
     };
     uploadQueue.value.push(item);
     uploadSingleFile(file, item);
@@ -418,13 +424,36 @@ const uploadSingleFile = async (file, item) => {
     addToast({ type: 'success', title: 'Unggah berhasil', message: `${file.name} berhasil diunggah.` });
   } catch (error) {
     item.status = 'error';
+    item.errorMessage = uploadErrorMessage(error, file);
     console.error('Upload failed', error);
     addToast({
       type: 'error',
       title: 'Unggah gagal',
-      message: error.response?.data?.message || `Gagal mengunggah ${file.name}.`,
+      message: `${file.name}: ${item.errorMessage}`,
     });
   }
+};
+
+const retryUpload = (item) => {
+  item.status = 'uploading';
+  item.progress = 0;
+  item.errorMessage = '';
+  uploadSingleFile(item.file, item);
+};
+
+const uploadErrorMessage = (error, file) => {
+  const serverMessage = error.response?.data?.message;
+  if (serverMessage) return serverMessage;
+
+  const status = error.response?.status;
+  if (status === 413) return 'Ukuran file melebihi batas yang diizinkan server.';
+  if (status === 422) {
+    const firstFieldError = Object.values(error.response?.data?.errors || {})[0]?.[0];
+    return firstFieldError || 'File tidak valid.';
+  }
+  if (status >= 500) return 'Terjadi kesalahan pada server. Coba lagi beberapa saat lagi.';
+  if (!error.response) return 'Koneksi terputus saat mengunggah. Periksa jaringan lalu coba lagi.';
+  return `Gagal mengunggah ${file.name}.`;
 };
 
 // ----- Folder actions -----

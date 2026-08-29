@@ -23,7 +23,8 @@ let nextId = 1;
 export const addToast = (toast) => {
   const id = nextId++;
   toasts.value.push({ ...toast, id });
-  setTimeout(() => removeToast(id), toast.duration || 5000);
+  const fallbackDuration = toast.type === 'error' ? 9000 : 5000;
+  setTimeout(() => removeToast(id), toast.duration || fallbackDuration);
 };
 export const removeToast = (id) => {
   const index = toasts.value.findIndex(toast => toast.id === id);
