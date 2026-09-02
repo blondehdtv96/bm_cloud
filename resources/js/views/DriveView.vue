@@ -53,21 +53,32 @@
     <transition name="fade">
       <div v-if="uploadQueue.length" class="glass-card p-3 flex flex-col gap-2 animate-slide-down">
         <div class="flex items-center justify-between px-1">
-          <span class="text-xs font-semibold text-secondary uppercase tracking-wider">Mengunggah ({{ activeUploadCount }})</span>
-          <button v-if="allUploadsSettled" class="text-xs text-secondary hover:text-primary" @click="uploadQueue = []">Bersihkan</button>
+          <span class="text-xs font-semibold text-secondary uppercase tracking-wider">
+            Unggahan · {{ activeUploadCount }} aktif
+          </span>
+          <button v-if="allUploadsSettled" type="button" class="text-xs font-semibold text-secondary hover:text-primary" @click="uploadQueue = []">Bersihkan</button>
         </div>
-        <div v-for="item in uploadQueue" :key="item.id" class="flex items-center gap-3 px-1">
-          <svg v-if="item.status === 'done'" class="w-4 h-4 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          <svg v-else-if="item.status === 'error'" class="w-4 h-4 text-red-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-          <svg v-else class="w-4 h-4 text-indigo-400 flex-shrink-0 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+        <div v-for="item in uploadQueue" :key="item.id" class="flex items-center gap-3 px-1 py-1">
+          <svg v-if="item.status === 'done'" class="w-4 h-4 text-emerald-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <svg v-else-if="item.status === 'error'" class="w-4 h-4 text-red-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+          <svg v-else-if="item.status === 'queued'" class="w-4 h-4 text-secondary flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 14"></polyline></svg>
+          <svg v-else class="w-4 h-4 text-indigo-500 flex-shrink-0 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
           <div class="flex-1 min-w-0">
-            <div class="flex justify-between text-xs mb-1">
-              <span class="truncate max-w-[70%] font-medium" :class="item.status === 'error' ? 'text-danger' : 'text-primary'">{{ item.name }}</span>
-              <span class="text-secondary flex-shrink-0">
-                {{ item.status === 'error' ? 'Gagal' : item.status === 'processing' ? 'Memproses…' : item.progress + '%' }}
-              </span>
+            <div class="flex items-center justify-between gap-3 text-xs mb-1">
+              <span class="truncate font-medium" :class="item.status === 'error' ? 'text-danger' : 'text-primary'">{{ item.name }}</span>
+              <div class="flex items-center gap-3 flex-shrink-0">
+                <span class="text-secondary">
+                  {{ item.status === 'queued' ? 'Menunggu…' : item.status === 'uploading' ? item.progress + '%' : item.status === 'processing' ? 'Memproses…' : item.status === 'done' ? 'Selesai' : 'Gagal' }}
+                </span>
+                <button
+                  v-if="item.status === 'uploading' || item.status === 'processing'"
+                  type="button"
+                  class="font-semibold text-danger hover:underline"
+                  @click="cancelUpload(item)"
+                >Batal</button>
+              </div>
             </div>
-            <div class="h-1.5 w-full bg-black/30 rounded-full overflow-hidden relative">
+            <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden relative">
               <div
                 class="h-full rounded-full"
                 :class="[
@@ -242,7 +253,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick, onMounted } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { api } from '../composables/useApi';
 import { addToast } from '../components/ui/Toast.vue';
@@ -267,8 +278,8 @@ const isDragging = ref(false);
 let dragCounter = 0;
 
 const uploadQueue = ref([]);
-const activeUploadCount = computed(() => uploadQueue.value.filter(i => i.status === 'uploading' || i.status === 'processing').length);
-const allUploadsSettled = computed(() => uploadQueue.value.length > 0 && uploadQueue.value.every(i => i.status !== 'uploading' && i.status !== 'processing'));
+const activeUploadCount = computed(() => uploadQueue.value.filter(i => ['queued', 'uploading', 'processing'].includes(i.status)).length);
+const allUploadsSettled = computed(() => uploadQueue.value.length > 0 && uploadQueue.value.every(i => ['done', 'error'].includes(i.status)));
 
 const showNewFolderModal = ref(false);
 const newFolderName = ref('');
@@ -382,45 +393,84 @@ const onDrop = (e) => {
 };
 
 let uploadIdSeq = 1;
+const MAX_CONCURRENT_UPLOADS = 2;
+const MAX_UPLOAD_SIZE_BYTES = 512 * 1024 * 1024;
+const UPLOAD_TIMEOUT_MS = 180000;
+const uploadControllers = new Map();
 
 const uploadFiles = (fileList) => {
   if (!fileList.length) return;
 
   fileList.forEach((file) => {
-    const item = {
+    const tooLarge = file.size > MAX_UPLOAD_SIZE_BYTES;
+    uploadQueue.value.push({
       id: uploadIdSeq++,
       file,
       name: file.name,
       progress: 0,
-      status: 'uploading',
-      errorMessage: '',
-    };
-    uploadQueue.value.push(item);
-    uploadSingleFile(file, item);
+      status: tooLarge ? 'error' : 'queued',
+      errorMessage: tooLarge ? 'Ukuran maksimum file adalah 512 MB.' : '',
+    });
   });
+
+  processUploadQueue();
 };
 
-const uploadSingleFile = async (file, item) => {
+/**
+ * Maksimal dua transfer bersamaan. Mengirim semua file sekaligus sebelumnya
+ * membuat koneksi browser/Apache penuh dan item lain terlihat diam di 0%.
+ */
+const processUploadQueue = () => {
+  const running = uploadQueue.value.filter((item) => ['uploading', 'processing'].includes(item.status)).length;
+  const slots = Math.max(0, MAX_CONCURRENT_UPLOADS - running);
+
+  uploadQueue.value
+    .filter((item) => item.status === 'queued')
+    .slice(0, slots)
+    .forEach(uploadSingleFile);
+};
+
+const uploadSingleFile = async (item) => {
+  const file = item.file;
   const formData = new FormData();
   formData.append('file', file);
   if (folderId.value) formData.append('folder_id', folderId.value);
 
+  const controller = new AbortController();
+  uploadControllers.set(item.id, controller);
+  item.status = 'uploading';
+  item.progress = 1; // Beri umpan balik segera, bahkan sebelum event progress pertama.
+  item.errorMessage = '';
+
   try {
     const response = await api.post('/files/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      onUploadProgress: (evt) => {
-        if (evt.total) {
-          item.progress = Math.round((evt.loaded / evt.total) * 100);
-          // Data sudah selesai terkirim dari browser tapi server masih menyimpan
-          // & menghitung hash file besar, jadi tampilkan status memproses.
-          if (item.progress >= 100) item.status = 'processing';
+      // Jangan set Content-Type manual. Axios/browser akan menambahkan boundary.
+      signal: controller.signal,
+      timeout: UPLOAD_TIMEOUT_MS,
+      onUploadProgress: (event) => {
+        if (event.loaded <= 0) return;
+
+        const total = event.total || file.size;
+        const percent = total > 0 ? Math.round((event.loaded / total) * 100) : 1;
+        item.progress = Math.max(1, Math.min(100, percent));
+
+        // Transfer browser selesai; server masih menyimpan, hash, dan mencatat DB.
+        if ((event.total && event.loaded >= event.total) || item.progress >= 100) {
+          item.progress = 100;
+          item.status = 'processing';
         }
       },
     });
 
     item.status = 'done';
     item.progress = 100;
-    files.value.push(response.data);
+
+    // Retry setelah respons jaringan terputus dapat mengembalikan item yang sama;
+    // hindari menampilkan duplikat berdasarkan id database.
+    if (!files.value.some((existing) => existing.id === response.data.id)) {
+      files.value.push(response.data);
+    }
+
     addToast({ type: 'success', title: 'Unggah berhasil', message: `${file.name} berhasil diunggah.` });
   } catch (error) {
     item.status = 'error';
@@ -431,30 +481,46 @@ const uploadSingleFile = async (file, item) => {
       title: 'Unggah gagal',
       message: `${file.name}: ${item.errorMessage}`,
     });
+  } finally {
+    uploadControllers.delete(item.id);
+    processUploadQueue();
   }
 };
 
+const cancelUpload = (item) => {
+  uploadControllers.get(item.id)?.abort();
+};
+
 const retryUpload = (item) => {
-  item.status = 'uploading';
+  item.status = 'queued';
   item.progress = 0;
   item.errorMessage = '';
-  uploadSingleFile(item.file, item);
+  processUploadQueue();
 };
 
 const uploadErrorMessage = (error, file) => {
-  const serverMessage = error.response?.data?.message;
-  if (serverMessage) return serverMessage;
+  if (error.code === 'ERR_CANCELED') return 'Unggahan dibatalkan.';
+  if (error.code === 'ECONNABORTED') return 'Server tidak merespons dalam 3 menit. Periksa MySQL lalu coba lagi.';
 
   const status = error.response?.status;
   if (status === 413) return 'Ukuran file melebihi batas yang diizinkan server.';
   if (status === 422) {
     const firstFieldError = Object.values(error.response?.data?.errors || {})[0]?.[0];
-    return firstFieldError || 'File tidak valid.';
+    return firstFieldError || error.response?.data?.message || 'File tidak valid.';
   }
-  if (status >= 500) return 'Terjadi kesalahan pada server. Coba lagi beberapa saat lagi.';
-  if (!error.response) return 'Koneksi terputus saat mengunggah. Periksa jaringan lalu coba lagi.';
+  if (status === 503) return 'Layanan penyimpanan atau database sedang tidak tersedia.';
+  if (status >= 500) return error.response?.data?.message || 'Terjadi kesalahan pada server. Coba lagi beberapa saat lagi.';
+
+  const serverMessage = error.response?.data?.message;
+  if (serverMessage) return serverMessage;
+  if (!error.response) return 'Koneksi terputus saat mengunggah. Periksa server dan jaringan lalu coba lagi.';
   return `Gagal mengunggah ${file.name}.`;
 };
+
+onUnmounted(() => {
+  uploadControllers.forEach((controller) => controller.abort());
+  uploadControllers.clear();
+});
 
 // ----- Folder actions -----
 const closeNewFolderModal = () => {

@@ -14,6 +14,15 @@ api.interceptors.request.use((config) => {
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Browser harus membuat Content-Type multipart beserta boundary-nya sendiri.
+    // Default instance ini application/json; jika dibiarkan atau multipart
+    // dipaksa manual, PHP dapat menerima body tanpa boundary dan file tidak
+    // akan terbaca dengan benar.
+    if (config.data instanceof FormData) {
+        delete config.headers['Content-Type'];
+    }
+
     return config;
 });
 

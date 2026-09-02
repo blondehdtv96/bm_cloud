@@ -3,8 +3,14 @@
 namespace App\Services;
 
 use App\Models\File;
+use App\Models\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use RuntimeException;
+use Throwable;
 
 class FileStorageService
 {
@@ -15,36 +21,66 @@ class FileStorageService
         $this->activityService = $activityService;
     }
 
-    public function store($uploadedFile, $userId, $folderId = null)
+    /**
+     * Simpan file fisik lalu commit metadata, aktivitas, dan kuota dalam satu
+     * transaksi. Jika tahap apa pun gagal, file fisik yang baru dibuat dibuang.
+     */
+    public function store(UploadedFile $uploadedFile, int $userId, ?int $folderId = null): File
     {
-        $uuid = (string) Str::uuid();
-        $ext = $uploadedFile->getClientOriginalExtension();
-        $storedName = $uuid . ($ext ? '.' . $ext : '');
-        $path = 'uploads/' . $userId;
-        
-        $size = $uploadedFile->getSize();
-        
-        // Update user storage
-        $user = \App\Models\User::find($userId);
-        $user->storage_used += $size;
-        $user->save();
+        $extension = preg_replace('/[^a-zA-Z0-9]/', '', $uploadedFile->getClientOriginalExtension());
+        $storedName = (string) Str::uuid() . ($extension ? '.' . strtolower($extension) : '');
+        $directory = 'uploads/' . $userId;
+        $storedPath = null;
+        $size = (int) $uploadedFile->getSize();
 
-        $uploadedFile->storeAs($path, $storedName, 'local');
-        $hash = hash_file('sha256', Storage::disk('local')->path($path . '/' . $storedName));
+        try {
+            $storedPath = $uploadedFile->storeAs($directory, $storedName, 'local');
 
-        $file = File::create([
-            'user_id' => $userId,
-            'folder_id' => $folderId,
-            'original_name' => $uploadedFile->getClientOriginalName(),
-            'stored_name' => $storedName,
-            'mime_type' => $uploadedFile->getMimeType(),
-            'size' => $size,
-            'hash' => $hash,
-        ]);
+            if (!is_string($storedPath) || $storedPath === '') {
+                throw new RuntimeException('File gagal ditulis ke media penyimpanan.');
+            }
 
-        $this->activityService->log($userId, 'uploaded', $file);
+            $absolutePath = Storage::disk('local')->path($storedPath);
+            $hash = hash_file('sha256', $absolutePath);
 
-        return $file;
+            if ($hash === false) {
+                throw new RuntimeException('Hash file gagal dihitung.');
+            }
+
+            return DB::transaction(function () use ($uploadedFile, $userId, $folderId, $storedName, $size, $hash) {
+                $user = User::query()->lockForUpdate()->findOrFail($userId);
+                $newStorageUsed = (int) $user->storage_used + $size;
+
+                if ((int) $user->storage_quota > 0 && $newStorageUsed > (int) $user->storage_quota) {
+                    throw ValidationException::withMessages([
+                        'file' => 'Kuota penyimpanan tidak mencukupi untuk file ini.',
+                    ]);
+                }
+
+                $file = File::create([
+                    'user_id' => $userId,
+                    'folder_id' => $folderId,
+                    'original_name' => $uploadedFile->getClientOriginalName(),
+                    'stored_name' => $storedName,
+                    'mime_type' => $uploadedFile->getMimeType() ?: 'application/octet-stream',
+                    'size' => $size,
+                    'hash' => $hash,
+                ]);
+
+                $this->activityService->log($userId, 'uploaded', $file);
+
+                $user->storage_used = $newStorageUsed;
+                $user->save();
+
+                return $file;
+            }, 3);
+        } catch (Throwable $exception) {
+            if ($storedPath && Storage::disk('local')->exists($storedPath)) {
+                Storage::disk('local')->delete($storedPath);
+            }
+
+            throw $exception;
+        }
     }
 
     /**

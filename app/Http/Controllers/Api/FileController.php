@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreFileRequest;
 use App\Models\File;
-use App\Services\FileStorageService;
+use App\Models\User;
 use App\Services\ActivityService;
+use App\Services\FileStorageService;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class FileController extends Controller
 {
@@ -28,10 +31,50 @@ class FileController extends Controller
 
     public function upload(StoreFileRequest $request)
     {
-        $file = $this->storageService->store($request->file('file'), $request->user()->id, $request->folder_id);
+        $startedAt = microtime(true);
+        $uploadedFile = $request->file('file');
+        $userId = (int) $request->user()->id;
+        $folderId = $request->filled('folder_id') ? $request->integer('folder_id') : null;
+        $context = [
+            'user_id' => $userId,
+            'folder_id' => $folderId,
+            'file_name' => $uploadedFile->getClientOriginalName(),
+            'file_size' => (int) $uploadedFile->getSize(),
+        ];
 
-        // storage_used diperbarui di dalam service, jadi user perlu di-refresh dulu.
-        $this->notificationService->quotaWarning($request->user()->fresh());
+        Log::info('File upload started.', $context);
+
+        try {
+            $file = $this->storageService->store($uploadedFile, $userId, $folderId);
+        } catch (Throwable $exception) {
+            Log::error('File upload failed.', $context + [
+                'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+                'exception' => $exception::class,
+                'error' => $exception->getMessage(),
+            ]);
+
+            throw $exception;
+        }
+
+        Log::info('File upload completed.', $context + [
+            'file_id' => $file->id,
+            'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+        ]);
+
+        // Peringatan kuota tidak boleh menahan respons 201 upload.
+        defer(function () use ($userId) {
+            try {
+                $user = User::find($userId);
+                if ($user) {
+                    $this->notificationService->quotaWarning($user);
+                }
+            } catch (Throwable $exception) {
+                Log::warning('Quota notification failed after upload.', [
+                    'user_id' => $userId,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        });
 
         return response()->json($file, 201);
     }
