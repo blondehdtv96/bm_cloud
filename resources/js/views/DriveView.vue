@@ -395,7 +395,7 @@ const onDrop = (e) => {
 let uploadIdSeq = 1;
 const MAX_CONCURRENT_UPLOADS = 2;
 const MAX_UPLOAD_SIZE_BYTES = 512 * 1024 * 1024;
-const UPLOAD_TIMEOUT_MS = 180000;
+const UPLOAD_TIMEOUT_MS = 10 * 60 * 1000;
 const uploadControllers = new Map();
 
 const uploadFiles = (fileList) => {
@@ -500,7 +500,7 @@ const retryUpload = (item) => {
 
 const uploadErrorMessage = (error, file) => {
   if (error.code === 'ERR_CANCELED') return 'Unggahan dibatalkan.';
-  if (error.code === 'ECONNABORTED') return 'Server tidak merespons dalam 3 menit. Periksa MySQL lalu coba lagi.';
+  if (error.code === 'ECONNABORTED') return 'Server tidak merespons dalam 10 menit. Periksa MySQL lalu coba lagi.';
 
   const status = error.response?.status;
   if (status === 413) return 'Ukuran file melebihi batas yang diizinkan server.';

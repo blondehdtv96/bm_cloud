@@ -1,3 +1,12 @@
+<IfModule php_module>
+    # XAMPP/Apache membaca request body sebelum Laravel dijalankan. Nilai ini
+    # harus cukup besar agar file hingga batas aplikasi (512 MB) dapat diterima.
+    php_value upload_max_filesize 512M
+    php_value post_max_size 520M
+    php_value max_input_time 600
+    php_value max_execution_time 600
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
