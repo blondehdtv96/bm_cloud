@@ -80,6 +80,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:super_admin,ict')->prefix('admin')->group(function () {
         Route::get('stats', [AdminController::class, 'stats']);
         Route::get('logs', [AdminController::class, 'logs']);
+        Route::get('logs/export', [AdminController::class, 'exportLogs']);
         Route::get('roles', [AdminRoleController::class, 'index']);
         Route::get('roles-list', [AdminRoleController::class, 'simpleList']);
         Route::apiResource('users', UserController::class);
