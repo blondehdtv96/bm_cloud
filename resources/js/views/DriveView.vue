@@ -1,70 +1,104 @@
 <template>
   <div
-    class="w-full h-full flex flex-col gap-4 relative"
+    class="page drive-page"
     @dragenter.prevent="onDragEnter"
     @dragover.prevent
     @dragleave.prevent="onDragLeave"
     @drop.prevent="onDrop"
   >
-    <!-- Toolbar -->
-    <div class="glass-card p-3 flex flex-wrap items-center justify-between gap-3 animate-slide-down">
-      <div class="flex items-center gap-2">
+    <!-- Page header: title + breadcrumb, primary actions -->
+    <div class="page-header !mb-0">
+      <div class="min-w-0">
+        <nav class="crumbs" aria-label="Lokasi folder">
+          <button type="button" class="crumb" :class="{ 'is-current': !breadcrumbs.length }" @click="navigateToFolder(null)">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Drive Saya
+          </button>
+          <template v-for="(crumb, idx) in breadcrumbs" :key="crumb.id">
+            <svg class="crumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            <button
+              type="button"
+              class="crumb"
+              :class="{ 'is-current': idx === breadcrumbs.length - 1 }"
+              :title="crumb.name"
+              @click="navigateToFolder(crumb.id)"
+            >{{ crumb.name }}</button>
+          </template>
+        </nav>
+        <h1 class="truncate">{{ currentFolderName }}</h1>
+      </div>
+
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <button class="btn btn-secondary" @click="showNewFolderModal = true">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
+          Folder Baru
+        </button>
         <button class="btn btn-primary" @click="openFilePicker">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
           Unggah
         </button>
         <input ref="fileInputRef" type="file" multiple class="hidden" @change="onFilesSelected">
-
-        <button class="btn btn-secondary" @click="showNewFolderModal = true">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
-          Folder Baru
-        </button>
-      </div>
-      
-      <div class="view-toggle">
-        <button class="view-toggle-btn" :class="{ active: viewMode === 'grid' }" @click="viewMode = 'grid'">
-          <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-        </button>
-        <button class="view-toggle-btn" :class="{ active: viewMode === 'list' }" @click="viewMode = 'list'">
-          <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-        </button>
       </div>
     </div>
 
-    <!-- Breadcrumbs -->
-    <div class="flex items-center gap-2 text-sm text-secondary font-medium px-2 animate-fade-in overflow-x-auto">
-      <button class="hover:text-primary transition-colors flex items-center gap-1 flex-shrink-0" @click="navigateToFolder(null)">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        Drive Saya
-      </button>
-      <template v-for="(crumb, idx) in breadcrumbs" :key="crumb.id">
-        <span class="flex-shrink-0">/</span>
-        <button
-          class="hover:text-primary transition-colors truncate max-w-[160px] flex-shrink-0"
-          :class="{ 'text-primary': idx === breadcrumbs.length - 1 }"
-          @click="navigateToFolder(crumb.id)"
-        >
-          {{ crumb.name }}
+    <!-- Toolbar / selection bar -->
+    <div class="drive-toolbar" :class="{ 'is-selecting': selectedCount > 0 }">
+      <template v-if="selectedCount === 0">
+        <label v-if="totalItems" class="select-all" title="Pilih semua">
+          <input type="checkbox" class="check" :checked="false" @change="selectAll">
+          <span>Pilih</span>
+        </label>
+        <span class="toolbar-meta">{{ summaryText }}</span>
+        <span class="toolbar-spacer"></span>
+        <div class="segmented" role="group" aria-label="Tampilan">
+          <button type="button" :class="{ 'is-active': viewMode === 'grid' }" title="Tampilan petak" :aria-pressed="viewMode === 'grid'" @click="setViewMode('grid')">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect></svg>
+          </button>
+          <button type="button" :class="{ 'is-active': viewMode === 'list' }" title="Tampilan daftar" :aria-pressed="viewMode === 'list'" @click="setViewMode('list')">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+          </button>
+        </div>
+      </template>
+
+      <template v-else>
+        <label class="select-all" :title="allSelected ? 'Batalkan semua' : 'Pilih semua'">
+          <input
+            type="checkbox"
+            class="check"
+            :checked="allSelected"
+            :indeterminate.prop="!allSelected"
+            @change="allSelected ? clearSelection() : selectAll()"
+          >
+        </label>
+        <span class="selection-count">{{ selectedCount }} item dipilih</span>
+        <span class="toolbar-meta hidden sm:inline">{{ selectedSizeText }}</span>
+        <span class="toolbar-spacer"></span>
+        <button class="btn btn-sm btn-primary" :disabled="downloading" @click="startDownload">
+          <svg v-if="!downloading" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <svg v-else class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+          {{ downloading ? downloadProgressText : 'Unduh' }}
+        </button>
+        <button class="btn btn-sm btn-secondary sel-danger" :disabled="downloading" @click="deleteSelected">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          <span class="hidden sm:inline">Hapus</span>
+        </button>
+        <button class="btn-icon" title="Batalkan pilihan (Esc)" @click="clearSelection">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </template>
     </div>
 
     <!-- Upload progress panel -->
     <transition name="fade">
-      <div v-if="uploadQueue.length" class="glass-card p-3 flex flex-col gap-2 animate-slide-down">
-        <div class="flex items-center justify-between px-1">
-          <span class="text-xs font-semibold text-secondary uppercase tracking-wider">
-            Unggahan · {{ activeUploadCount }} aktif
-          </span>
-          <button v-if="allUploadsSettled" type="button" class="text-xs font-semibold text-secondary hover:text-primary" @click="uploadQueue = []">Bersihkan</button>
+      <div v-if="uploadQueue.length" class="card upload-panel">
+        <div class="flex items-center justify-between">
+          <span class="section-label !mb-0">Unggahan · {{ activeUploadCount }} aktif</span>
+          <button v-if="allUploadsSettled" type="button" class="btn btn-sm btn-ghost" @click="uploadQueue = []">Bersihkan</button>
         </div>
-        <div v-for="item in uploadQueue" :key="item.id" class="flex items-center gap-3 px-1 py-1">
-          <svg v-if="item.status === 'done'" class="w-4 h-4 text-emerald-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          <svg v-else-if="item.status === 'error'" class="w-4 h-4 text-red-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-          <svg v-else-if="item.status === 'queued'" class="w-4 h-4 text-secondary flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 14"></polyline></svg>
-          <svg v-else class="w-4 h-4 text-indigo-500 flex-shrink-0 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+        <div v-for="item in uploadQueue" :key="item.id" class="flex items-center gap-3">
+          <FileTypeIcon :name="item.name" size="sm" />
           <div class="flex-1 min-w-0">
-            <div class="flex items-center justify-between gap-3 text-xs mb-1">
+            <div class="flex items-center justify-between gap-3 text-xs mb-1.5">
               <span class="truncate font-medium" :class="item.status === 'error' ? 'text-danger' : 'text-primary'">{{ item.name }}</span>
               <div class="flex items-center gap-3 flex-shrink-0">
                 <span class="text-secondary">
@@ -78,12 +112,12 @@
                 >Batal</button>
               </div>
             </div>
-            <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden relative">
+            <div class="progress-track">
               <div
-                class="h-full rounded-full"
+                class="progress-bar"
                 :class="[
-                  item.status === 'error' ? 'bg-red-500' : (item.status === 'done' ? 'bg-emerald-500' : 'bg-indigo-500 upload-bar-active'),
-                  item.status === 'processing' ? 'upload-bar-indeterminate' : 'transition-all duration-200',
+                  item.status === 'error' ? 'is-error' : (item.status === 'done' ? 'is-done' : 'upload-bar-active'),
+                  item.status === 'processing' ? 'upload-bar-indeterminate' : '',
                 ]"
                 :style="item.status === 'processing' ? '' : `width: ${item.progress}%`"
               ></div>
@@ -97,113 +131,187 @@
       </div>
     </transition>
 
-    <!-- Dropzone / Content Area -->
-    <div class="flex-1 relative glass-card p-4 overflow-y-auto min-h-[400px]">
-
-      <!-- Drag overlay -->
-      <div v-if="isDragging" class="absolute inset-2 z-20 rounded-xl border-2 border-dashed border-indigo-400 bg-indigo-500/10 flex flex-col items-center justify-center pointer-events-none">
-        <svg class="w-12 h-12 text-indigo-400 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-        <p class="text-indigo-300 font-medium">Lepaskan file di sini untuk mengunggah</p>
+    <!-- Content -->
+    <div class="drive-content">
+      <div v-if="isDragging" class="drop-overlay">
+        <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        <p>Lepaskan file untuk mengunggah ke <strong>{{ currentFolderName }}</strong></p>
       </div>
 
-      <!-- Loading -->
-      <div v-if="loading" class="h-full flex items-center justify-center">
-        <div class="animate-pulse flex flex-col items-center gap-2">
-          <svg class="w-8 h-8 text-primary animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
-          <span class="text-sm text-secondary">Memuat isi folder...</span>
-        </div>
+      <div v-if="loading" class="card loading-state">
+        <svg class="w-7 h-7 animate-spin text-accent-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+        <span class="text-sm text-secondary">Memuat isi folder…</span>
       </div>
 
-      <!-- Empty state -->
-      <EmptyState
-        v-else-if="folders.length === 0 && files.length === 0"
-        title="Folder ini masih kosong"
-        description="Seret file ke sini atau klik tombol Unggah untuk menambahkan file."
-        action-text="Unggah File"
-        @action="openFilePicker"
-      />
+      <div v-else-if="totalItems === 0" class="card">
+        <EmptyState
+          title="Folder ini masih kosong"
+          description="Seret file ke sini atau klik tombol Unggah untuk menambahkan file."
+          action-text="Unggah File"
+          @action="openFilePicker"
+        />
+      </div>
 
-      <template v-else>
-        <!-- Folder Grid -->
-        <template v-if="folders.length">
-          <h3 class="section-label">Folder</h3>
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+      <!-- Grid view -->
+      <template v-else-if="viewMode === 'grid'">
+        <section v-if="folders.length">
+          <h2 class="section-label">Folder</h2>
+          <div class="folder-grid">
             <div
               v-for="folder in folders"
               :key="'f' + folder.id"
-              class="folder-tile group"
-              @click="navigateToFolder(folder.id)"
+              class="folder-tile"
+              :class="{ 'is-selected': isSelected('folder', folder.id) }"
+              tabindex="0"
+              @click="onItemClick($event, 'folder', folder)"
+              @keydown.enter="navigateToFolder(folder.id)"
             >
-              <svg class="w-5 h-5 folder-glyph flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-              <span class="text-sm font-medium truncate flex-1">{{ folder.name }}</span>
-              <button class="tile-action btn-icon text-secondary hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" @click.stop="openShare(folder, 'folder')" title="Bagikan">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-              </button>
-              <button class="tile-action btn-icon text-secondary hover:text-danger opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" @click.stop="deleteFolder(folder)" title="Hapus">
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-              </button>
+              <input
+                type="checkbox"
+                class="check tile-check"
+                :checked="isSelected('folder', folder.id)"
+                :aria-label="`Pilih ${folder.name}`"
+                @click.stop
+                @change="toggleSelect('folder', folder.id)"
+              >
+              <svg class="folder-glyph" viewBox="0 0 24 24" fill="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              <span class="folder-name" :title="folder.name">{{ folder.name }}</span>
+              <div class="tile-actions">
+                <button class="btn-icon" title="Bagikan" @click.stop="openShare(folder, 'folder')">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                </button>
+                <button class="btn-icon danger" title="Hapus" @click.stop="deleteFolder(folder)">
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+              </div>
             </div>
           </div>
-        </template>
+        </section>
 
-        <!-- File Grid / List -->
-        <template v-if="files.length">
-          <h3 class="section-label">File</h3>
-          <div v-if="viewMode === 'grid'" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <section v-if="files.length">
+          <h2 class="section-label">File</h2>
+          <div class="file-grid">
             <div
               v-for="file in files"
               :key="'doc' + file.id"
-              class="file-tile-card group"
-              @click="openPreview(file)"
+              class="file-card"
+              :class="{ 'is-selected': isSelected('file', file.id) }"
+              tabindex="0"
+              @click="onItemClick($event, 'file', file)"
+              @keydown.enter="openPreview(file)"
             >
               <div class="file-thumb">
-                <svg class="w-9 h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                <div class="file-thumb-actions">
-                  <button class="btn-icon text-secondary hover:text-primary bg-white" @click.stop="openShare(file, 'file')" title="Bagikan">
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                <FileTypeIcon :name="file.original_name" size="lg" />
+                <input
+                  type="checkbox"
+                  class="check tile-check"
+                  :checked="isSelected('file', file.id)"
+                  :aria-label="`Pilih ${file.original_name}`"
+                  @click.stop
+                  @change="toggleSelect('file', file.id)"
+                >
+                <div class="tile-actions">
+                  <button class="btn-icon" title="Bagikan" @click.stop="openShare(file, 'file')">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
                   </button>
-                  <button class="btn-icon text-secondary hover:text-primary bg-white" @click.stop="downloadFile(file)" title="Unduh">
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <button class="btn-icon" title="Unduh" @click.stop="downloadFile(file)">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                   </button>
-                  <button class="btn-icon text-secondary hover:text-danger bg-white" @click.stop="deleteFile(file)" title="Hapus">
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  <button class="btn-icon danger" title="Hapus" @click.stop="deleteFile(file)">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                   </button>
                 </div>
               </div>
-              <span class="text-sm font-medium truncate mb-0.5" :title="file.original_name">{{ file.original_name }}</span>
-              <span class="text-xs text-secondary">{{ file.formatted_size }}</span>
-              <span class="text-xs text-secondary" :title="formatDateTime(file.created_at)">{{ formatDate(file.created_at) }}</span>
+              <div class="file-info">
+                <span class="file-name" :title="file.original_name">{{ file.original_name }}</span>
+                <span class="file-meta" :title="formatDateTime(file.created_at)">{{ file.formatted_size }} · {{ formatDate(file.created_at) }}</span>
+              </div>
             </div>
           </div>
+        </section>
+      </template>
 
-          <table v-else class="table-modern">
+      <!-- List view: folders and files in one table -->
+      <div v-else class="card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="table-modern drive-table">
             <thead>
               <tr>
+                <th class="w-10">
+                  <input
+                    type="checkbox"
+                    class="check"
+                    :checked="allSelected"
+                    :indeterminate.prop="selectedCount > 0 && !allSelected"
+                    aria-label="Pilih semua"
+                    @change="allSelected ? clearSelection() : selectAll()"
+                  >
+                </th>
                 <th>Nama</th>
-                <th class="hidden md:table-cell">Ukuran</th>
-                <th class="hidden md:table-cell">Diunggah</th>
-                <th class="text-right">Aksi</th>
+                <th class="hidden md:table-cell w-32">Ukuran</th>
+                <th class="hidden md:table-cell w-48">Diubah</th>
+                <th class="w-32"><span class="sr-only">Aksi</span></th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="file in files" :key="'list' + file.id" class="group cursor-pointer" @click="openPreview(file)">
+              <tr
+                v-for="folder in folders"
+                :key="'lf' + folder.id"
+                class="cursor-pointer"
+                :class="{ 'is-selected': isSelected('folder', folder.id) }"
+                @click="onItemClick($event, 'folder', folder)"
+              >
+                <td @click.stop>
+                  <input type="checkbox" class="check" :checked="isSelected('folder', folder.id)" :aria-label="`Pilih ${folder.name}`" @change="toggleSelect('folder', folder.id)">
+                </td>
                 <td>
-                  <div class="flex items-center gap-3">
-                    <svg class="w-5 h-5 text-indigo-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                    <span class="font-medium truncate">{{ file.original_name }}</span>
+                  <div class="flex items-center gap-3 min-w-0">
+                    <span class="folder-icon-sm">
+                      <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                    </span>
+                    <span class="font-medium truncate">{{ folder.name }}</span>
+                  </div>
+                </td>
+                <td class="text-secondary hidden md:table-cell">—</td>
+                <td class="text-secondary hidden md:table-cell">{{ formatDateTime(folder.updated_at || folder.created_at) }}</td>
+                <td>
+                  <div class="row-actions">
+                    <button class="btn-icon" title="Bagikan" @click.stop="openShare(folder, 'folder')">
+                      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                    </button>
+                    <button class="btn-icon danger" title="Hapus" @click.stop="deleteFolder(folder)">
+                      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr
+                v-for="file in files"
+                :key="'lx' + file.id"
+                class="cursor-pointer"
+                :class="{ 'is-selected': isSelected('file', file.id) }"
+                @click="onItemClick($event, 'file', file)"
+              >
+                <td @click.stop>
+                  <input type="checkbox" class="check" :checked="isSelected('file', file.id)" :aria-label="`Pilih ${file.original_name}`" @change="toggleSelect('file', file.id)">
+                </td>
+                <td>
+                  <div class="flex items-center gap-3 min-w-0">
+                    <FileTypeIcon :name="file.original_name" size="sm" />
+                    <span class="font-medium truncate" :title="file.original_name">{{ file.original_name }}</span>
                   </div>
                 </td>
                 <td class="text-secondary hidden md:table-cell">{{ file.formatted_size }}</td>
                 <td class="text-secondary hidden md:table-cell">{{ formatDateTime(file.created_at) }}</td>
-                <td class="text-right">
-                  <div class="row-actions flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button class="btn-icon text-secondary hover:text-primary" @click.stop="openShare(file, 'file')" title="Bagikan">
+                <td>
+                  <div class="row-actions">
+                    <button class="btn-icon" title="Bagikan" @click.stop="openShare(file, 'file')">
                       <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
                     </button>
-                    <button class="btn-icon text-secondary hover:text-primary" @click.stop="downloadFile(file)" title="Unduh">
+                    <button class="btn-icon" title="Unduh" @click.stop="downloadFile(file)">
                       <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     </button>
-                    <button class="btn-icon text-secondary hover:text-danger" @click.stop="deleteFile(file)" title="Hapus">
+                    <button class="btn-icon danger" title="Hapus" @click.stop="deleteFile(file)">
                       <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </button>
                   </div>
@@ -211,8 +319,8 @@
               </tr>
             </tbody>
           </table>
-        </template>
-      </template>
+        </div>
+      </div>
     </div>
 
     <!-- File Preview Modal -->
@@ -225,6 +333,53 @@
 
     <!-- Share Modal -->
     <ShareModal :visible="shareVisible" :item="shareItem" @close="shareVisible = false" />
+
+    <!-- Download options modal -->
+    <Modal :visible="downloadModalVisible" title="Unduh item terpilih" size="sm" @close="downloadModalVisible = false">
+      <p class="text-sm mb-4">
+        {{ selectedFiles.length }} file<template v-if="selectedFolders.length"> dan {{ selectedFolders.length }} folder</template> dipilih.
+        Pilih cara mengunduh:
+      </p>
+      <div class="download-options" role="radiogroup">
+        <label class="download-option" :class="{ 'is-active': downloadMode === 'zip' }">
+          <input v-model="downloadMode" type="radio" value="zip" class="sr-only">
+          <span class="option-icon zip">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8"></path><path d="M1 3h22v5H1z"></path><path d="M10 12h4"></path></svg>
+          </span>
+          <span class="flex-1 min-w-0">
+            <span class="option-title">Satu arsip ZIP <span class="badge badge-indigo ml-1">Disarankan</span></span>
+            <span class="option-desc">Semua item digabung jadi satu file .zip. Struktur folder tetap terjaga. Bisa dibuka dengan WinRAR atau Windows Explorer.</span>
+          </span>
+        </label>
+        <label class="download-option" :class="{ 'is-active': downloadMode === 'single', 'is-disabled': selectedFolders.length > 0 }">
+          <input v-model="downloadMode" type="radio" value="single" class="sr-only" :disabled="selectedFolders.length > 0">
+          <span class="option-icon single">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          </span>
+          <span class="flex-1 min-w-0">
+            <span class="option-title">Satu per satu</span>
+            <span class="option-desc">
+              <template v-if="selectedFolders.length">Tidak tersedia jika ada folder yang dipilih.</template>
+              <template v-else>Setiap file diunduh terpisah ({{ selectedFiles.length }} unduhan). Browser mungkin meminta izin mengunduh banyak file.</template>
+            </span>
+          </span>
+        </label>
+      </div>
+      <div v-if="downloadMode === 'zip'" class="form-group mt-4 mb-0">
+        <label class="form-label" for="archive-name">Nama arsip</label>
+        <div class="flex items-center gap-2">
+          <input id="archive-name" v-model="archiveName" type="text" class="form-control" maxlength="120" placeholder="Nama file ZIP">
+          <span class="text-sm text-secondary">.zip</span>
+        </div>
+      </div>
+      <template #footer>
+        <button class="btn btn-secondary" @click="downloadModalVisible = false">Batal</button>
+        <button class="btn btn-primary" @click="confirmDownload">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          {{ downloadMode === 'zip' ? 'Unduh ZIP' : `Unduh ${selectedFiles.length} file` }}
+        </button>
+      </template>
+    </Modal>
 
     <!-- New Folder Modal -->
     <Modal :visible="showNewFolderModal" title="Buat Folder Baru" size="sm" @close="closeNewFolderModal">
@@ -256,22 +411,42 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { api } from '../composables/useApi';
+import { saveBlobResponse, blobErrorMessage } from '../composables/fileTypes';
 import { addToast } from '../components/ui/Toast.vue';
 import Modal from '../components/ui/Modal.vue';
 import EmptyState from '../components/ui/EmptyState.vue';
 import FilePreviewModal from '../components/ui/FilePreviewModal.vue';
 import ShareModal from '../components/ui/ShareModal.vue';
+import FileTypeIcon from '../components/ui/FileTypeIcon.vue';
 
 const route = useRoute();
 const router = useRouter();
 
+const VIEW_MODE_KEY = 'bmclouds_drive_view';
+const readViewMode = () => {
+  try { return localStorage.getItem(VIEW_MODE_KEY) === 'list' ? 'list' : 'grid'; } catch { return 'grid'; }
+};
+
 const folderId = ref(route.params.folderId ? Number(route.params.folderId) : null);
-const viewMode = ref('grid'); // 'grid' | 'list'
+const viewMode = ref(readViewMode()); // 'grid' | 'list'
+const setViewMode = (mode) => {
+  viewMode.value = mode;
+  try { localStorage.setItem(VIEW_MODE_KEY, mode); } catch { /* ignore */ }
+};
 
 const folders = ref([]);
 const files = ref([]);
 const breadcrumbs = ref([]);
 const loading = ref(false);
+
+const totalItems = computed(() => folders.value.length + files.value.length);
+const currentFolderName = computed(() => breadcrumbs.value.length ? breadcrumbs.value[breadcrumbs.value.length - 1].name : 'Drive Saya');
+const summaryText = computed(() => {
+  const parts = [];
+  if (folders.value.length) parts.push(`${folders.value.length} folder`);
+  if (files.value.length) parts.push(`${files.value.length} file`);
+  return parts.length ? parts.join(' · ') : 'Kosong';
+});
 
 const fileInputRef = ref(null);
 const isDragging = ref(false);
@@ -297,6 +472,51 @@ const closePreview = () => {
   previewVisible.value = false;
 };
 
+// ----- Selection -----
+// Keys look like "file:12" / "folder:3".
+const selected = ref(new Set());
+const keyOf = (type, id) => `${type}:${id}`;
+const isSelected = (type, id) => selected.value.has(keyOf(type, id));
+const toggleSelect = (type, id) => {
+  const next = new Set(selected.value);
+  const key = keyOf(type, id);
+  next.has(key) ? next.delete(key) : next.add(key);
+  selected.value = next;
+};
+const selectAll = () => {
+  selected.value = new Set([
+    ...folders.value.map((f) => keyOf('folder', f.id)),
+    ...files.value.map((f) => keyOf('file', f.id)),
+  ]);
+};
+const clearSelection = () => { selected.value = new Set(); };
+const selectedCount = computed(() => selected.value.size);
+const allSelected = computed(() => totalItems.value > 0 && selectedCount.value === totalItems.value);
+const selectedFiles = computed(() => files.value.filter((f) => isSelected('file', f.id)));
+const selectedFolders = computed(() => folders.value.filter((f) => isSelected('folder', f.id)));
+const selectedSizeText = computed(() => {
+  const bytes = selectedFiles.value.reduce((sum, f) => sum + (Number(f.size) || 0), 0);
+  if (!bytes) return '';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let i = 0; let v = bytes;
+  while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
+  return `${v.toFixed(i ? 1 : 0)} ${units[i]}${selectedFolders.value.length ? ' + isi folder' : ''}`;
+});
+
+// Click on a card: open it, or toggle selection when already selecting / Ctrl-click.
+const onItemClick = (event, type, item) => {
+  if (selectedCount.value > 0 || event.ctrlKey || event.metaKey) {
+    toggleSelect(type, item.id);
+    return;
+  }
+  if (type === 'folder') navigateToFolder(item.id);
+  else openPreview(item);
+};
+
+const onGlobalKeydown = (event) => {
+  if (event.key === 'Escape' && selectedCount.value && !downloadModalVisible.value) clearSelection();
+};
+
 // ----- Share -----
 const shareVisible = ref(false);
 const shareItem = ref(null);
@@ -312,6 +532,7 @@ const openShare = (entity, type) => {
 
 const fetchContents = async () => {
   loading.value = true;
+  clearSelection();
   try {
     const response = await api.get('/folders', { params: { folder_id: folderId.value } });
     folders.value = response.data.folders || [];
@@ -366,7 +587,9 @@ watch(() => route.query.action, applyQueryAction);
 onMounted(() => {
   loadAll();
   applyQueryAction();
+  document.addEventListener('keydown', onGlobalKeydown);
 });
+onUnmounted(() => document.removeEventListener('keydown', onGlobalKeydown));
 
 // ----- Upload -----
 const openFilePicker = () => fileInputRef.value?.click();
@@ -561,6 +784,7 @@ const deleteFolder = async (folder) => {
   try {
     await api.delete(`/folders/${folder.id}`);
     folders.value = folders.value.filter(f => f.id !== folder.id);
+    if (isSelected('folder', folder.id)) toggleSelect('folder', folder.id);
     addToast({ type: 'success', title: 'Folder dihapus', message: `"${folder.name}" dipindahkan ke sampah.` });
   } catch (error) {
     addToast({ type: 'error', title: 'Gagal', message: 'Tidak bisa menghapus folder.' });
@@ -571,16 +795,11 @@ const deleteFolder = async (folder) => {
 const downloadFile = async (file) => {
   try {
     const response = await api.get(`/files/${file.id}/download`, { responseType: 'blob' });
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = file.original_name;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
+    saveBlobResponse(response, file.original_name);
+    return true;
   } catch (error) {
-    addToast({ type: 'error', title: 'Gagal mengunduh', message: `Tidak bisa mengunduh ${file.original_name}.` });
+    addToast({ type: 'error', title: 'Gagal mengunduh', message: await blobErrorMessage(error, `Tidak bisa mengunduh ${file.original_name}.`) });
+    return false;
   }
 };
 
@@ -589,10 +808,127 @@ const deleteFile = async (file) => {
   try {
     await api.delete(`/files/${file.id}`);
     files.value = files.value.filter(f => f.id !== file.id);
+    if (isSelected('file', file.id)) toggleSelect('file', file.id);
     addToast({ type: 'success', title: 'File dihapus', message: `"${file.original_name}" dipindahkan ke sampah.` });
   } catch (error) {
     addToast({ type: 'error', title: 'Gagal', message: 'Tidak bisa menghapus file.' });
   }
+};
+
+// ----- Bulk download (single files or one ZIP archive) -----
+const downloadModalVisible = ref(false);
+const downloadMode = ref('zip'); // 'zip' | 'single'
+const archiveName = ref('');
+const downloading = ref(false);
+const downloadProgressText = ref('');
+
+const defaultArchiveName = () => {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const base = selectedFolders.value.length === 1 && selectedFiles.value.length === 0
+    ? selectedFolders.value[0].name
+    : (breadcrumbs.value.length ? currentFolderName.value : 'BM-Cloud');
+  return `${base} ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
+const startDownload = () => {
+  // One plain file: no need to ask.
+  if (selectedFiles.value.length === 1 && selectedFolders.value.length === 0) {
+    runSingleDownloads();
+    return;
+  }
+  downloadMode.value = 'zip';
+  archiveName.value = defaultArchiveName();
+  downloadModalVisible.value = true;
+};
+
+const confirmDownload = () => {
+  downloadModalVisible.value = false;
+  if (downloadMode.value === 'zip') runArchiveDownload();
+  else runSingleDownloads();
+};
+
+const runSingleDownloads = async () => {
+  const list = [...selectedFiles.value];
+  downloading.value = true;
+  let ok = 0;
+  for (const [i, file] of list.entries()) {
+    downloadProgressText.value = `Mengunduh ${i + 1}/${list.length}`;
+    if (await downloadFile(file)) ok++;
+    // Small gap so the browser does not drop rapid consecutive downloads.
+    if (i < list.length - 1) await new Promise((r) => setTimeout(r, 400));
+  }
+  downloading.value = false;
+  if (list.length > 1) {
+    addToast({ type: ok === list.length ? 'success' : 'warning', title: 'Unduhan selesai', message: `${ok} dari ${list.length} file berhasil diunduh.` });
+  }
+  if (ok === list.length) clearSelection();
+};
+
+const runArchiveDownload = async () => {
+  downloading.value = true;
+  downloadProgressText.value = 'Menyiapkan ZIP…';
+  try {
+    const response = await api.post('/files/download-archive', {
+      file_ids: selectedFiles.value.map((f) => f.id),
+      folder_ids: selectedFolders.value.map((f) => f.id),
+      name: archiveName.value.trim() || undefined,
+    }, {
+      responseType: 'blob',
+      timeout: 15 * 60 * 1000,
+      onDownloadProgress: (e) => {
+        if (e.loaded > 0) {
+          downloadProgressText.value = e.total
+            ? `Mengunduh ${Math.round((e.loaded / e.total) * 100)}%`
+            : `Mengunduh ${(e.loaded / 1048576).toFixed(1)} MB`;
+        }
+      },
+    });
+    const filename = saveBlobResponse(response, `${archiveName.value.trim() || 'BM-Cloud'}.zip`);
+    const count = Number(response.headers['x-archive-files'] || 0);
+    const missing = Number(response.headers['x-archive-missing'] || 0);
+    addToast({
+      type: missing ? 'warning' : 'success',
+      title: 'Arsip ZIP siap',
+      message: `${filename} berisi ${count} file.` + (missing ? ` ${missing} file tidak ditemukan di server dan dilewati.` : ''),
+    });
+    clearSelection();
+  } catch (error) {
+    console.error('Archive download failed', error);
+    addToast({ type: 'error', title: 'Gagal membuat ZIP', message: await blobErrorMessage(error, 'Arsip tidak bisa dibuat. Coba lagi.') });
+  } finally {
+    downloading.value = false;
+  }
+};
+
+// ----- Bulk delete -----
+const deleteSelected = async () => {
+  const fileList = [...selectedFiles.value];
+  const folderList = [...selectedFolders.value];
+  const total = fileList.length + folderList.length;
+  if (!confirm(`Hapus ${total} item terpilih? Item akan dipindahkan ke sampah.`)) return;
+
+  let ok = 0;
+  for (const folder of folderList) {
+    try {
+      await api.delete(`/folders/${folder.id}`);
+      folders.value = folders.value.filter((f) => f.id !== folder.id);
+      ok++;
+    } catch { /* reported below */ }
+  }
+  for (const file of fileList) {
+    try {
+      await api.delete(`/files/${file.id}`);
+      files.value = files.value.filter((f) => f.id !== file.id);
+      ok++;
+    } catch { /* reported below */ }
+  }
+  clearSelection();
+  addToast({
+    type: ok === total ? 'success' : 'warning',
+    title: ok === total ? 'Item dihapus' : 'Sebagian gagal dihapus',
+    message: `${ok} dari ${total} item dipindahkan ke sampah.`,
+  });
 };
 
 const formatDate = (dateString) => {
@@ -613,103 +949,171 @@ const formatDateTime = (dateString) => {
 </script>
 
 <style scoped>
-.view-toggle { display: flex; align-items: center; gap: 2px; border: 0; border-radius: 9px; background: var(--fill-secondary); padding: 2px; }
-.view-toggle-btn { display: flex; align-items: center; justify-content: center; width: 34px; height: 32px; border-radius: 7px; color: var(--text-secondary); background: none; border: none; cursor: pointer; transition: background .15s ease, color .15s ease, box-shadow .15s ease; }
-.view-toggle-btn:hover { color: var(--text-primary); }
-.view-toggle-btn.active { background: var(--bg-secondary); color: var(--accent-primary); box-shadow: var(--shadow-card); }
-.fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
+.drive-page { min-height: 100%; position: relative; }
 
-/* Efek shimmer bergerak di atas progress bar selama transfer berlangsung. */
-.upload-bar-active {
-  position: relative;
-  overflow: hidden;
+/* Breadcrumb above the page title */
+.crumbs { display: flex; align-items: center; gap: .25rem; margin-bottom: .35rem; overflow-x: auto; scrollbar-width: none; }
+.crumbs::-webkit-scrollbar { display: none; }
+.crumb {
+  display: inline-flex; align-items: center; gap: .35rem; flex-shrink: 0;
+  max-width: 14rem; padding: .15rem .35rem; border: 0; border-radius: 6px; background: none;
+  color: var(--text-muted); font-size: .8125rem; font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+.crumb:hover { color: var(--accent-primary); background: var(--accent-tint); }
+.crumb.is-current { color: var(--text-secondary); }
+.crumb-sep { width: 14px; height: 14px; flex-shrink: 0; color: #b8c2cf; }
+
+/* Toolbar */
+.drive-toolbar {
+  position: sticky; top: -1.5rem; z-index: 5;
+  display: flex; align-items: center; gap: .75rem; min-height: 52px;
+  padding: .45rem .6rem .45rem .9rem;
+  border: 1px solid var(--separator); border-radius: 12px;
+  background: var(--bg-secondary); box-shadow: var(--shadow-card);
+  transition: background .15s ease, border-color .15s ease;
+}
+.drive-toolbar.is-selecting { background: var(--accent-tint); border-color: #bfd3fb; }
+.select-all { display: inline-flex; align-items: center; gap: .55rem; font-size: .8125rem; font-weight: 500; color: var(--text-secondary); cursor: pointer; user-select: none; }
+.toolbar-meta { font-size: .8125rem; color: var(--text-muted); white-space: nowrap; }
+.toolbar-spacer { flex: 1 1 auto; }
+.selection-count { font-size: .875rem; font-weight: 600; color: #1e40af; white-space: nowrap; }
+.sel-danger { color: var(--accent-danger); }
+.sel-danger:hover:not(:disabled) { background: #fdecec; border-color: #f5b5b5; }
+
+/* Upload panel */
+.upload-panel { display: flex; flex-direction: column; gap: .75rem; padding: .9rem 1rem; }
+.progress-bar.is-error { background: var(--accent-danger); }
+.progress-bar.is-done { background: var(--accent-success); }
+
+/* Content area */
+.drive-content { position: relative; display: flex; flex-direction: column; gap: 1.5rem; flex: 1; }
+.loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6rem; min-height: 280px; }
+.drop-overlay {
+  position: absolute; inset: 0; z-index: 20; min-height: 240px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .6rem;
+  border: 2px dashed var(--accent-primary); border-radius: 14px;
+  background: rgba(234, 241, 255, .92); color: var(--accent-primary);
+  pointer-events: none;
+}
+.drop-overlay p { color: #1e40af; font-size: .9rem; }
+
+/* Folder tiles */
+.folder-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: .75rem; }
+.folder-tile {
+  position: relative; display: flex; align-items: center; gap: .7rem;
+  min-height: 56px; padding: .65rem .75rem;
+  border: 1px solid var(--separator); border-radius: 12px; background: var(--bg-secondary);
+  box-shadow: var(--shadow-card); cursor: pointer; user-select: none;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.folder-tile:hover { border-color: #cfd7e2; box-shadow: var(--shadow-hover); }
+.folder-glyph { width: 22px; height: 22px; flex-shrink: 0; color: #f5b70a; }
+.folder-name { flex: 1; min-width: 0; font-size: .875rem; font-weight: 550; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* File cards */
+.file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: .9rem; }
+.file-card {
+  position: relative; display: flex; flex-direction: column; overflow: hidden;
+  border: 1px solid var(--separator); border-radius: 14px; background: var(--bg-secondary);
+  box-shadow: var(--shadow-card); cursor: pointer; user-select: none;
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.file-card:hover { border-color: #cfd7e2; box-shadow: var(--shadow-hover); transform: translateY(-1px); }
+.file-thumb {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  height: 124px; background: linear-gradient(180deg, #f8fafc, #f1f4f8);
+  border-bottom: 1px solid var(--separator);
+}
+.file-info { display: flex; flex-direction: column; gap: .2rem; padding: .7rem .8rem .8rem; min-width: 0; }
+.file-name { font-size: .8125rem; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-meta { font-size: .75rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Selection state */
+.folder-tile.is-selected, .file-card.is-selected { border-color: var(--accent-primary); box-shadow: 0 0 0 1px var(--accent-primary); background: #f5f9ff; }
+.file-card.is-selected .file-thumb { background: var(--accent-tint); }
+.tile-check { opacity: 0; transition: opacity .12s ease; }
+.file-thumb .tile-check { position: absolute; top: .6rem; left: .6rem; }
+.folder-tile:hover .tile-check, .file-card:hover .tile-check,
+.tile-check:checked, .tile-check:focus-visible,
+.drive-page:has(.drive-toolbar.is-selecting) .tile-check { opacity: 1; }
+/* Folder checkbox takes the icon's place until the tile is hovered/selected. */
+.folder-tile .tile-check { position: absolute; left: .75rem; }
+.folder-tile:hover .folder-glyph, .folder-tile.is-selected .folder-glyph,
+.drive-page:has(.drive-toolbar.is-selecting) .folder-glyph { opacity: 0; }
+
+/* Hover actions float over the card, so they never squeeze the name. */
+.tile-actions {
+  display: flex; gap: .2rem; opacity: 0; pointer-events: none;
+  transition: opacity .12s ease;
+}
+.folder-tile .tile-actions {
+  position: absolute; right: .4rem; top: 50%; transform: translateY(-50%);
+  padding-left: 1.25rem;
+  background: linear-gradient(90deg, rgba(255,255,255,0), var(--bg-secondary) 1.1rem);
+}
+.folder-tile.is-selected .tile-actions { background: linear-gradient(90deg, rgba(245,249,255,0), #f5f9ff 1.1rem); }
+.file-thumb .tile-actions { position: absolute; top: .5rem; right: .5rem; }
+.file-thumb .tile-actions .btn-icon { width: 30px; height: 30px; border-radius: 8px; background: #fff; box-shadow: var(--shadow-card); }
+.folder-tile:hover .tile-actions, .file-card:hover .tile-actions,
+.tile-actions:focus-within { opacity: 1; pointer-events: auto; }
+.drive-page:has(.drive-toolbar.is-selecting) .tile-actions { opacity: 0; pointer-events: none; }
+.btn-icon.danger:hover { color: var(--accent-danger); background: #fdecec; }
+
+/* List view */
+.drive-table tbody tr.is-selected { background: #f5f9ff; }
+.drive-table tbody tr.is-selected:hover { background: var(--accent-tint); }
+.folder-icon-sm { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; background: #fff7e0; color: #f5b70a; flex-shrink: 0; }
+.row-actions { display: flex; justify-content: flex-end; gap: .15rem; opacity: 0; transition: opacity .12s ease; }
+.drive-table tbody tr:hover .row-actions, .row-actions:focus-within { opacity: 1; }
+
+/* Download options modal */
+.download-options { display: flex; flex-direction: column; gap: .6rem; }
+.download-option {
+  display: flex; align-items: flex-start; gap: .8rem; padding: .85rem .9rem;
+  border: 1.5px solid var(--separator-opaque); border-radius: 12px; cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
+}
+.download-option:hover { border-color: #b7c6dc; }
+.download-option.is-active { border-color: var(--accent-primary); background: #f5f9ff; }
+.download-option.is-disabled { opacity: .55; cursor: not-allowed; }
+.option-icon { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0; }
+.option-icon.zip { background: #fff7e6; color: #b45309; }
+.option-icon.single { background: var(--accent-tint); color: var(--accent-primary); }
+.option-title { display: flex; align-items: center; font-size: .875rem; font-weight: 600; color: var(--text-primary); }
+.option-desc { display: block; margin-top: .2rem; font-size: .78rem; line-height: 1.45; color: var(--text-secondary); }
+
+/* Upload bar animations */
+.upload-bar-active { position: relative; overflow: hidden; }
 .upload-bar-active::after {
-  content: '';
-  position: absolute;
-  inset: 0;
+  content: ''; position: absolute; inset: 0;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .35), transparent);
   animation: upload-shimmer 1.2s linear infinite;
 }
-@keyframes upload-shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+@keyframes upload-shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+.upload-bar-indeterminate { width: 40% !important; animation: upload-indeterminate 1.1s ease-in-out infinite; }
+@keyframes upload-indeterminate { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+
+.fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+@media (max-width: 767px) {
+  .drive-toolbar { top: -1rem; padding-left: .7rem; gap: .5rem; }
+  .folder-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
+  .file-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
+  .file-thumb { height: 100px; }
 }
 
-/* Saat server masih menyimpan file (progress browser sudah 100%), tampilkan bar tak-tentu. */
-.upload-bar-indeterminate {
-  width: 40% !important;
-  animation: upload-indeterminate 1.1s ease-in-out infinite;
-}
-@keyframes upload-indeterminate {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(250%); }
+/* Touch devices have no hover: always show checkboxes and actions. */
+@media (hover: none) {
+  .tile-check, .row-actions { opacity: 1; }
+  .folder-tile .folder-glyph { display: none; }
+  .folder-tile .tile-check { position: static; }
+  .file-thumb .tile-actions { opacity: 1; pointer-events: auto; }
+  .folder-tile .tile-actions { position: static; transform: none; opacity: 1; pointer-events: auto; background: none; padding: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .upload-bar-active::after,
-  .upload-bar-indeterminate { animation: none; }
-}
-
-/* Kartu folder ala Drive: baris kompak, ikon + nama, tanpa efek angkat. */
-.folder-tile {
-  display: flex;
-  align-items: center;
-  gap: .65rem;
-  padding: .7rem .85rem;
-  border: 1px solid var(--separator);
-  border-radius: 8px;
-  background: var(--bg-secondary);
-  cursor: pointer;
-  transition: background .15s ease, border-color .15s ease;
-}
-.folder-tile:hover { background: var(--fill-secondary); border-color: var(--separator-opaque); }
-.folder-glyph { color: #fbbc04; }
-
-/* Kartu file ala Drive: thumbnail di atas, nama + ukuran di bawah, terangkat saat hover. */
-.file-tile-card {
-  display: flex;
-  flex-direction: column;
-  padding: .6rem;
-  border: 1px solid var(--separator);
-  border-radius: 8px;
-  background: var(--bg-secondary);
-  cursor: pointer;
-  transition: box-shadow .15s ease, border-color .15s ease;
-}
-.file-tile-card:hover { box-shadow: var(--shadow-hover); border-color: var(--separator); }
-.file-thumb {
-  position: relative;
-  height: 6rem;
-  margin-bottom: .65rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  background: var(--fill-secondary);
-  color: var(--accent-primary);
-}
-.file-thumb-actions {
-  position: absolute;
-  top: .35rem;
-  right: .35rem;
-  display: flex;
-  gap: .25rem;
-  opacity: 0;
-  transition: opacity .15s ease;
-}
-.file-tile-card:hover .file-thumb-actions,
-.file-thumb-actions:focus-within { opacity: 1; }
-.file-thumb-actions .btn-icon { width: 28px; height: 28px; box-shadow: var(--shadow-card); }
-
-/* Perangkat sentuh tidak punya :hover, jadi aksi (Bagikan/Unduh/Hapus) yang
-   sebelumnya hanya muncul saat hover harus selalu tampil di sana. */
-@media (hover: none) {
-  .tile-action,
-  .file-thumb-actions,
-  .row-actions {
-    opacity: 1;
-  }
+  .upload-bar-active::after, .upload-bar-indeterminate { animation: none; }
 }
 </style>

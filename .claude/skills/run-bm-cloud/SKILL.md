@@ -106,10 +106,13 @@ php artisan test --no-ansi     # 2 passed (only the Laravel example tests exist)
 - **`GET /api/files` returns 500** (`Call to undefined method FileController::index()`):
   `apiResource('files')` registers `index`, but the controller has none. The SPA lists
   folder contents with `GET /api/folders?folder_id=<id>` instead, and so does `smoke.sh`.
-- **Tailwind width utilities lose to `.form-control`**: `resources/css/app.css` is unlayered,
-  so `.form-control { width: 100% }` beats Tailwind v4's layered utilities (`sm:w-40`,
-  `w-full`, ...), and controls overflow their container. Size form controls with scoped CSS
-  in the component (see `AdminLogs.vue`). Check with `BM_EVAL` + `getBoundingClientRect()`.
+- **CSS layering rule**: `resources/css/app.css` keeps base styles in `@layer base` and component
+  classes (`.btn`, `.form-control`, `.card`, ...) in `@layer components`, so Tailwind utilities
+  (`p-4`, `sm:w-40`) win. Unlayered CSS beats every Tailwind utility: an unlayered
+  `* { padding: 0 }` once silently removed all padding app-wide. Only the legacy colour aliases
+  stay unlayered (and use `background-color`, not `background`, to keep select chevrons).
+- **Toasts**: `Toast.vue` keeps its store in a plain `<script>`; the `<script setup>` must
+  re-bind it (`const items = toasts`) or the template renders nothing.
 - **The login API field is `username`** (it also accepts the email in that field), not `email`.
 - **Delete is soft**: files deleted by `smoke.sh` go to the trash (Sampah) and still count
   toward the dashboard's "Total File" and storage numbers. Expect leftover `smoke.txt` entries.

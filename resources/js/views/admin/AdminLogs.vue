@@ -152,7 +152,7 @@ const actionOptions = [
 
 const groupOf = (action) => ({
   uploaded: 'upload', uploaded_new_version: 'upload',
-  downloaded: 'download', monitored_file_download: 'download',
+  downloaded: 'download', downloaded_archive: 'download', monitored_file_download: 'download',
   created: 'create', deleted: 'delete',
   shared: 'share', created_share_link: 'share',
   monitored_drive: 'monitor', monitored_file_preview: 'monitor',

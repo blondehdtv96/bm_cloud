@@ -13,8 +13,10 @@
         <svg v-else class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
       </button>
 
-      <div class="min-w-0">
-        <h1 class="text-sm font-semibold text-primary truncate">{{ currentRouteName }}</h1>
+      <div class="min-w-0 header-title">
+        <span v-if="currentSection" class="header-section">{{ currentSection }}</span>
+        <svg v-if="currentSection" class="header-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        <h1 class="header-page">{{ currentRouteName }}</h1>
       </div>
     </div>
 
@@ -116,6 +118,14 @@ const routeLabels = {
 };
 const currentRouteName = computed(() => routeLabels[route.name] || 'Penyimpanan Cloud');
 
+const routeSections = {
+  Dashboard: 'Ruang Kerja', Drive: 'Ruang Kerja', Shared: 'Ruang Kerja', Favorites: 'Ruang Kerja',
+  Trash: 'Ruang Kerja', Search: 'Ruang Kerja', Profile: 'Akun', DriveMonitor: 'Pengawasan',
+  AdminDashboard: 'Administrasi', AdminUsers: 'Administrasi', AdminRoles: 'Administrasi',
+  AdminLogs: 'Administrasi', AdminBackup: 'Administrasi',
+};
+const currentSection = computed(() => routeSections[route.name] || '');
+
 const userInitials = computed(() => {
   const name = authStore.user?.name || 'User';
   return name.substring(0, 2).toUpperCase();
@@ -178,6 +188,14 @@ const logout = async () => {
 }
 
 .header-left { flex: 1 1 0; }
+.header-title { display: flex; align-items: center; gap: .4rem; min-width: 0; }
+.header-section { display: none; font-size: .8125rem; font-weight: 500; color: var(--text-muted); white-space: nowrap; }
+.header-sep { display: none; width: 14px; height: 14px; flex-shrink: 0; color: #b8c2cf; }
+.header-page { font-size: .9rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (min-width: 768px) {
+  .header-section, .header-sep { display: inline-block; }
+  .header-page { font-size: .8125rem; font-weight: 600; }
+}
 .header-right { flex: 1 1 0; justify-content: flex-end; }
 .header-center { display: none; }
 

@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('files', FileController::class)->except(['store', 'destroy']);
     Route::delete('files/{id}', [FileController::class, 'destroy'])->middleware('permission:files.delete');
     Route::post('files/upload', [FileController::class, 'upload']);
+    Route::post('files/download-archive', [FileController::class, 'downloadArchive'])->middleware('permission:files.download');
     Route::get('files/{id}/download', [FileController::class, 'download'])->middleware('permission:files.download');
     Route::get('files/{id}/preview', [FileController::class, 'preview'])->middleware('permission:files.download');
     Route::post('files/{id}/move', [FileController::class, 'move']);

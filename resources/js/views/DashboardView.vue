@@ -187,9 +187,9 @@ const fileTone = (file) => {
   return 'tone-blue';
 };
 
-const actionLabels = { created: 'Membuat item', uploaded: 'Mengunggah file', downloaded: 'Mengunduh file', deleted: 'Menghapus item', shared: 'Membagikan item', updated: 'Memperbarui item', monitored_drive: 'Memantau drive' };
+const actionLabels = { created: 'Membuat folder', uploaded: 'Mengunggah file', uploaded_new_version: 'Mengunggah versi baru', downloaded: 'Mengunduh file', downloaded_archive: 'Mengunduh arsip ZIP', deleted: 'Menghapus item', shared: 'Membagikan item', created_share_link: 'Membuat tautan berbagi', updated: 'Memperbarui item', monitored_drive: 'Memantau drive', monitored_file_preview: 'Pratinjau file (pantau)', monitored_file_download: 'Mengunduh file (pantau)', created_backup: 'Membuat backup', restored_backup: 'Memulihkan backup' };
 const actionLabel = (action) => actionLabels[action] || 'Aktivitas';
-const actionTone = (action) => ({ uploaded: 'tone-blue', created: 'tone-green', shared: 'tone-teal', downloaded: 'tone-amber', deleted: 'tone-red', monitored_drive: 'tone-purple' }[action] || 'tone-blue');
+const actionTone = (action) => ({ uploaded: 'tone-blue', uploaded_new_version: 'tone-blue', created: 'tone-green', shared: 'tone-teal', created_share_link: 'tone-teal', downloaded: 'tone-amber', downloaded_archive: 'tone-amber', deleted: 'tone-red', monitored_drive: 'tone-purple' }[action] || 'tone-blue');
 
 const goToFile = (file) => {
   router.push(file.folder_id ? `/drive/${file.folder_id}` : '/drive');

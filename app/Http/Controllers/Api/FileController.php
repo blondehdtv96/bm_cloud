@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreFileRequest;
 use App\Models\File;
+use App\Models\Folder;
 use App\Models\User;
 use App\Services\ActivityService;
+use App\Services\ArchiveLimitException;
+use App\Services\ArchiveService;
 use App\Services\FileStorageService;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
@@ -120,6 +123,62 @@ class FileController extends Controller
         $this->authorizeAccess($request, $file);
 
         return $this->storageService->preview($file);
+    }
+
+    /**
+     * Download several files and/or folders as one ZIP archive.
+     * Folders are added recursively, keeping their sub-folder structure.
+     */
+    public function downloadArchive(Request $request, ArchiveService $archiveService)
+    {
+        $data = $request->validate([
+            'file_ids' => ['array', 'max:'.ArchiveService::MAX_FILES],
+            'file_ids.*' => ['integer'],
+            'folder_ids' => ['array', 'max:200'],
+            'folder_ids.*' => ['integer'],
+            'name' => ['nullable', 'string', 'max:120'],
+        ]);
+        $fileIds = array_values(array_unique($data['file_ids'] ?? []));
+        $folderIds = array_values(array_unique($data['folder_ids'] ?? []));
+        if (! $fileIds && ! $folderIds) {
+            abort(422, 'Pilih minimal satu file atau folder.');
+        }
+
+        $user = $request->user();
+        $files = File::whereIn('id', $fileIds)->get();
+        $folders = Folder::whereIn('id', $folderIds)->get();
+        if ($files->count() !== count($fileIds) || $folders->count() !== count($folderIds)) {
+            abort(404, 'Sebagian item tidak ditemukan atau sudah dihapus.');
+        }
+        foreach ($files as $file) {
+            $this->authorizeAccess($request, $file);
+        }
+        foreach ($folders as $folder) {
+            if ($folder->user_id !== $user->id && ! $folder->isSharedWith($user)) {
+                abort(403, 'Anda tidak memiliki akses ke folder "'.$folder->name.'".');
+            }
+        }
+
+        try {
+            $archive = $archiveService->build($files->sortBy('original_name'), $folders->sortBy('name'));
+        } catch (ArchiveLimitException $e) {
+            abort(422, $e->getMessage());
+        }
+
+        $this->activityService->log($user->id, 'downloaded_archive', null, [
+            'files' => $archive['files'],
+            'folders' => $folders->pluck('name')->all(),
+            'file_ids' => $files->pluck('id')->all(),
+        ]);
+
+        $baseName = trim(preg_replace('/[^\pL\pN _.-]+/u', '', (string) ($data['name'] ?? '')));
+        $downloadName = ($baseName !== '' ? $baseName : 'BM-Cloud-'.now()->format('Ymd-His')).'.zip';
+
+        return response()->download($archive['path'], $downloadName, [
+            'Content-Type' => 'application/zip',
+            'X-Archive-Files' => $archive['files'],
+            'X-Archive-Missing' => $archive['missing'],
+        ])->deleteFileAfterSend(true);
     }
 
     protected function authorizeAccess(Request $request, File $file): void

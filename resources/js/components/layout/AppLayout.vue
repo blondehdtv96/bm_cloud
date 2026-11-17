@@ -145,7 +145,8 @@ watch(() => route.fullPath, closeSidebar);
 @media (min-width: 768px) {
   /* Desktop: sidebar jadi kolom tetap, drawer dan overlay dimatikan. */
   .app-sidebar {
-    position: static;
+    position: relative; /* anchors the floating collapse toggle */
+    z-index: 20;
     visibility: visible;
     transform: none;
     transition: width .22s ease;

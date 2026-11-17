@@ -50,7 +50,7 @@
         <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
         <span>Dashboard</span>
       </router-link>
-      <router-link to="/drive" class="nav-item" active-class="active" :class="{ active: route.path.startsWith('/drive') }" title="Drive Saya" @click="$emit('navigate')">
+      <router-link to="/drive" class="nav-item" active-class="active" :class="{ active: route.path === '/drive' || route.path.startsWith('/drive/') }" title="Drive Saya" @click="$emit('navigate')">
         <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
         <span>Drive Saya</span>
       </router-link>

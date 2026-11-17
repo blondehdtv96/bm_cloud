@@ -45,7 +45,7 @@ class AdminController extends Controller
      */
     private const ACTION_GROUPS = [
         'upload' => ['uploaded', 'uploaded_new_version'],
-        'download' => ['downloaded', 'monitored_file_download'],
+        'download' => ['downloaded', 'downloaded_archive', 'monitored_file_download'],
         'create' => ['created'],
         'delete' => ['deleted'],
         'share' => ['shared', 'created_share_link'],
@@ -64,6 +64,7 @@ class AdminController extends Controller
         'monitored_drive' => 'Memantau drive',
         'monitored_file_preview' => 'Pratinjau file (pantau)',
         'monitored_file_download' => 'Mengunduh file (pantau)',
+        'downloaded_archive' => 'Mengunduh arsip ZIP',
         'created_backup' => 'Membuat backup',
         'restored_backup' => 'Memulihkan backup',
     ];
@@ -179,7 +180,8 @@ class AdminController extends Controller
 
         return $logs->each(function (Activity $log) use ($names) {
             $log->subject_name = $names[$log->subject_type][$log->subject_id]
-                ?? ($log->details['filename'] ?? null);
+                ?? ($log->details['filename'] ?? null)
+                ?? ($log->action === 'downloaded_archive' ? (($log->details['files'] ?? 0).' file') : null);
             $log->action_label = self::ACTION_LABELS[$log->action] ?? ucfirst(str_replace('_', ' ', $log->action));
         });
     }

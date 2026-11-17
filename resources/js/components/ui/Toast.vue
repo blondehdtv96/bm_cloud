@@ -1,14 +1,14 @@
 <template>
   <div class="toast-region" aria-live="polite">
     <TransitionGroup name="toast-slide">
-      <div v-for="toast in toasts" :key="toast.id" class="toast-card" :class="`toast-${toast.type}`">
+      <div v-for="toast in items" :key="toast.id" class="toast-card" :class="`toast-${toast.type}`">
         <div class="toast-icon">
           <svg v-if="toast.type === 'success'" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
           <svg v-else-if="toast.type === 'error'" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
           <svg v-else class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
         </div>
         <div class="toast-content"><h4>{{ toast.title }}</h4><p>{{ toast.message }}</p></div>
-        <button type="button" class="toast-close" aria-label="Tutup notifikasi" @click="removeToast(toast.id)">
+        <button type="button" class="toast-close" aria-label="Tutup notifikasi" @click="dismiss(toast.id)">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
@@ -32,7 +32,11 @@ export const removeToast = (id) => {
 };
 </script>
 
-<script setup></script>
+<script setup>
+// Bind the module-level store to the template; an empty <script setup> exposes nothing.
+const items = toasts;
+const dismiss = removeToast;
+</script>
 
 <style scoped>
 .toast-region { position: fixed; top: 1rem; left: 50%; z-index: 70; width: min(92vw, 390px); display: flex; flex-direction: column; gap: .6rem; transform: translateX(-50%); pointer-events: none; }
