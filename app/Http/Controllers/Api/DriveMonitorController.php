@@ -7,6 +7,8 @@ use App\Models\File;
 use App\Models\Folder;
 use App\Models\User;
 use App\Services\ActivityService;
+use App\Services\ArchiveLimitException;
+use App\Services\ArchiveService;
 use App\Services\FileStorageService;
 use Illuminate\Http\Request;
 
@@ -122,5 +124,54 @@ class DriveMonitorController extends Controller
         $this->activityService->log($request->user()->id, 'monitored_file_download', $file);
 
         return $this->storageService->download($file);
+    }
+
+    /**
+     * Read-only ZIP download of several files/folders from another user's drive.
+     * Folders are included recursively with their sub-folder structure.
+     */
+    public function downloadArchive(Request $request, ArchiveService $archiveService, $userId)
+    {
+        $targetUser = User::findOrFail($userId);
+        $data = $request->validate([
+            'file_ids' => ['array', 'max:'.ArchiveService::MAX_FILES],
+            'file_ids.*' => ['integer'],
+            'folder_ids' => ['array', 'max:500'],
+            'folder_ids.*' => ['integer'],
+            'name' => ['nullable', 'string', 'max:120'],
+        ]);
+        $fileIds = array_values(array_unique($data['file_ids'] ?? []));
+        $folderIds = array_values(array_unique($data['folder_ids'] ?? []));
+        if (! $fileIds && ! $folderIds) {
+            abort(422, 'Pilih minimal satu file atau folder.');
+        }
+
+        // Scoped to the monitored user: IDs from anyone else's drive are simply not found.
+        $files = File::where('user_id', $targetUser->id)->whereIn('id', $fileIds)->get();
+        $folders = Folder::where('user_id', $targetUser->id)->whereIn('id', $folderIds)->get();
+        if ($files->count() !== count($fileIds) || $folders->count() !== count($folderIds)) {
+            abort(404, 'Sebagian item tidak ditemukan atau sudah dihapus.');
+        }
+
+        try {
+            $archive = $archiveService->build($files->sortBy('original_name'), $folders->sortBy('name'));
+        } catch (ArchiveLimitException $e) {
+            abort(422, $e->getMessage());
+        }
+
+        $this->activityService->log($request->user()->id, 'monitored_archive_download', $targetUser, [
+            'files' => $archive['files'],
+            'folders' => $folders->pluck('name')->all(),
+            'file_ids' => $files->pluck('id')->all(),
+        ]);
+
+        $baseName = trim(preg_replace('/[^\pL\pN _.-]+/u', '', (string) ($data['name'] ?? '')));
+        $downloadName = ($baseName !== '' ? $baseName : $targetUser->name.' '.now()->format('Y-m-d')).'.zip';
+
+        return response()->download($archive['path'], $downloadName, [
+            'Content-Type' => 'application/zip',
+            'X-Archive-Files' => $archive['files'],
+            'X-Archive-Missing' => $archive['missing'],
+        ])->deleteFileAfterSend(true);
     }
 }

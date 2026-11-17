@@ -76,6 +76,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('users/{userId}/folders/{folderId}', [DriveMonitorController::class, 'folderTrail']);
         Route::get('users/{userId}/files/{fileId}/preview', [DriveMonitorController::class, 'previewFile']);
         Route::get('users/{userId}/files/{fileId}/download', [DriveMonitorController::class, 'downloadFile']);
+        Route::post('users/{userId}/download-archive', [DriveMonitorController::class, 'downloadArchive']);
     });
 
     Route::middleware('role:super_admin,ict')->prefix('admin')->group(function () {

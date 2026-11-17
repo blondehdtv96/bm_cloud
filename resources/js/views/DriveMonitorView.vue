@@ -87,6 +87,38 @@
             </template>
           </div>
 
+          <!-- Actions: download all / selection -->
+          <div v-if="!loadingContents && totalItems" class="content-actions" :class="{ 'is-selecting': selectedCount > 0 }">
+            <label class="select-all" :title="allSelected ? 'Batalkan semua' : 'Pilih semua'">
+              <input
+                type="checkbox"
+                class="check"
+                :checked="allSelected"
+                :indeterminate.prop="selectedCount > 0 && !allSelected"
+                @change="allSelected ? clearSelection() : selectAll()"
+              >
+              <span v-if="selectedCount === 0">Pilih</span>
+            </label>
+            <span v-if="selectedCount" class="selection-count">{{ selectedCount }} item dipilih</span>
+            <span v-else class="actions-meta">{{ summaryText }}</span>
+            <span class="flex-1"></span>
+            <template v-if="selectedCount">
+              <button class="btn btn-sm btn-primary" :disabled="downloading" @click="startDownload">
+                <svg v-if="!downloading" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <svg v-else class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+                {{ downloading ? downloadProgressText : 'Unduh' }}
+              </button>
+              <button class="btn-icon" title="Batalkan pilihan (Esc)" :disabled="downloading" @click="clearSelection">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+            </template>
+            <button v-else class="btn btn-sm btn-secondary" :disabled="downloading" @click="downloadAll">
+              <svg v-if="!downloading" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8v13H3V8"></path><path d="M1 3h22v5H1z"></path><path d="M10 12h4"></path></svg>
+              <svg v-else class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+              {{ downloading ? downloadProgressText : 'Unduh Semua' }}
+            </button>
+          </div>
+
           <div class="content-scroll">
             <div v-if="loadingContents" class="panel-state">
               <svg class="w-8 h-8 animate-spin" style="color: var(--accent-primary)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
@@ -107,11 +139,20 @@
                     v-for="(folder, i) in folders"
                     :key="'f' + folder.id"
                     class="folder-card"
+                    :class="{ 'is-selected': isSelected('folder', folder.id) }"
                     :style="`--d: ${i * 45}ms`"
-                    @click="navigateToFolder(folder.id)"
+                    @click="onItemClick($event, 'folder', folder)"
                   >
-                    <svg class="w-8 h-8 folder-glyph flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                    <span class="text-sm font-medium truncate">{{ folder.name }}</span>
+                    <input
+                      type="checkbox"
+                      class="check item-check"
+                      :checked="isSelected('folder', folder.id)"
+                      :aria-label="`Pilih ${folder.name}`"
+                      @click.stop
+                      @change="toggleSelect('folder', folder.id)"
+                    >
+                    <svg class="w-6 h-6 folder-glyph flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                    <span class="text-sm font-medium truncate" :title="folder.name">{{ folder.name }}</span>
                   </div>
                 </TransitionGroup>
               </template>
@@ -123,15 +164,28 @@
                     v-for="(file, i) in files"
                     :key="'doc' + file.id"
                     class="file-card group"
+                    :class="{ 'is-selected': isSelected('file', file.id) }"
                     :style="`--d: ${i * 45}ms`"
-                    @click="openPreview(file)"
+                    @click="onItemClick($event, 'file', file)"
                   >
                     <div class="file-thumb">
-                      <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                      <FileTypeIcon :name="file.original_name" size="lg" />
+                      <input
+                        type="checkbox"
+                        class="check item-check thumb-check"
+                        :checked="isSelected('file', file.id)"
+                        :aria-label="`Pilih ${file.original_name}`"
+                        @click.stop
+                        @change="toggleSelect('file', file.id)"
+                      >
+                      <button class="btn-icon thumb-download" title="Unduh" @click.stop="downloadFile(file)">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                      </button>
                     </div>
-                    <span class="text-sm font-medium truncate mb-1" :title="file.original_name">{{ file.original_name }}</span>
-                    <span class="text-xs text-secondary">{{ file.formatted_size }}</span>
-                    <span class="text-xs text-secondary truncate" :title="formatDateTime(file.created_at)">Diunggah {{ formatDateTime(file.created_at) }}</span>
+                    <div class="file-info">
+                      <span class="file-name" :title="file.original_name">{{ file.original_name }}</span>
+                      <span class="file-meta" :title="formatDateTime(file.created_at)">{{ file.formatted_size }} · {{ formatDateTime(file.created_at) }}</span>
+                    </div>
                   </div>
                 </TransitionGroup>
               </template>
@@ -154,15 +208,28 @@
       @close="previewVisible = false"
       @download="downloadFile"
     />
+
+    <DownloadOptionsModal
+      :visible="downloadModalVisible"
+      :title="`Unduh dari drive ${selectedUser?.name || ''}`"
+      :file-count="selectedFiles.length"
+      :folder-count="selectedFolders.length"
+      :default-name="defaultArchiveName()"
+      @close="downloadModalVisible = false"
+      @confirm="confirmDownload"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { api } from '../composables/useApi';
+import { saveBlobResponse, blobErrorMessage } from '../composables/fileTypes';
 import { addToast } from '../components/ui/Toast.vue';
 import EmptyState from '../components/ui/EmptyState.vue';
 import FilePreviewModal from '../components/ui/FilePreviewModal.vue';
+import FileTypeIcon from '../components/ui/FileTypeIcon.vue';
+import DownloadOptionsModal from '../components/ui/DownloadOptionsModal.vue';
 
 const users = ref([]);
 const loadingUsers = ref(false);
@@ -227,6 +294,7 @@ const selectUser = (user) => {
 const fetchContents = async () => {
   if (!selectedUser.value) return;
   loadingContents.value = true;
+  clearSelection();
   try {
     const response = await api.get(`/drive-monitor/users/${selectedUser.value.id}/contents`, {
       params: { folder_id: currentFolderId.value },
@@ -268,20 +336,142 @@ const openPreview = (file) => {
 const downloadFile = async (file) => {
   try {
     const response = await api.get(`/drive-monitor/users/${selectedUser.value.id}/files/${file.id}/download`, { responseType: 'blob' });
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = file.original_name;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.URL.revokeObjectURL(url);
+    saveBlobResponse(response, file.original_name);
+    return true;
   } catch (error) {
-    addToast({ type: 'error', title: 'Gagal mengunduh', message: `Tidak bisa mengunduh ${file.original_name}.` });
+    addToast({ type: 'error', title: 'Gagal mengunduh', message: await blobErrorMessage(error, `Tidak bisa mengunduh ${file.original_name}.`) });
+    return false;
   }
 };
 
-onMounted(fetchUsers);
+// ----- Selection -----
+const selected = ref(new Set());
+const keyOf = (type, id) => `${type}:${id}`;
+const isSelected = (type, id) => selected.value.has(keyOf(type, id));
+const toggleSelect = (type, id) => {
+  const next = new Set(selected.value);
+  const key = keyOf(type, id);
+  next.has(key) ? next.delete(key) : next.add(key);
+  selected.value = next;
+};
+const selectAll = () => {
+  selected.value = new Set([
+    ...folders.value.map((f) => keyOf('folder', f.id)),
+    ...files.value.map((f) => keyOf('file', f.id)),
+  ]);
+};
+const clearSelection = () => { selected.value = new Set(); };
+const totalItems = computed(() => folders.value.length + files.value.length);
+const selectedCount = computed(() => selected.value.size);
+const allSelected = computed(() => totalItems.value > 0 && selectedCount.value === totalItems.value);
+const selectedFiles = computed(() => files.value.filter((f) => isSelected('file', f.id)));
+const selectedFolders = computed(() => folders.value.filter((f) => isSelected('folder', f.id)));
+const summaryText = computed(() => [
+  folders.value.length ? `${folders.value.length} folder` : '',
+  files.value.length ? `${files.value.length} file` : '',
+].filter(Boolean).join(' · '));
+
+const onItemClick = (event, type, item) => {
+  if (selectedCount.value > 0 || event.ctrlKey || event.metaKey) {
+    toggleSelect(type, item.id);
+    return;
+  }
+  if (type === 'folder') navigateToFolder(item.id);
+  else openPreview(item);
+};
+
+// ----- Bulk download -----
+const downloadModalVisible = ref(false);
+const downloading = ref(false);
+const downloadProgressText = ref('');
+
+const defaultArchiveName = () => {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const folderName = breadcrumbs.value.length ? breadcrumbs.value[breadcrumbs.value.length - 1].name : 'Semua';
+  return `${selectedUser.value?.name || 'Drive'} - ${folderName} ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
+const startDownload = () => {
+  if (selectedFiles.value.length === 1 && selectedFolders.value.length === 0) {
+    runSingleDownloads();
+    return;
+  }
+  downloadModalVisible.value = true;
+};
+
+const downloadAll = () => {
+  selectAll();
+  startDownload();
+};
+
+const confirmDownload = ({ mode, name }) => {
+  downloadModalVisible.value = false;
+  if (mode === 'zip') runArchiveDownload(name);
+  else runSingleDownloads();
+};
+
+const runSingleDownloads = async () => {
+  const list = [...selectedFiles.value];
+  downloading.value = true;
+  let ok = 0;
+  for (const [i, file] of list.entries()) {
+    downloadProgressText.value = `Mengunduh ${i + 1}/${list.length}`;
+    if (await downloadFile(file)) ok++;
+    if (i < list.length - 1) await new Promise((r) => setTimeout(r, 400));
+  }
+  downloading.value = false;
+  if (list.length > 1) {
+    addToast({ type: ok === list.length ? 'success' : 'warning', title: 'Unduhan selesai', message: `${ok} dari ${list.length} file berhasil diunduh.` });
+  }
+  if (ok === list.length) clearSelection();
+};
+
+const runArchiveDownload = async (name) => {
+  downloading.value = true;
+  downloadProgressText.value = 'Menyiapkan ZIP…';
+  try {
+    const response = await api.post(`/drive-monitor/users/${selectedUser.value.id}/download-archive`, {
+      file_ids: selectedFiles.value.map((f) => f.id),
+      folder_ids: selectedFolders.value.map((f) => f.id),
+      name: name || undefined,
+    }, {
+      responseType: 'blob',
+      timeout: 15 * 60 * 1000,
+      onDownloadProgress: (e) => {
+        if (e.loaded > 0) {
+          downloadProgressText.value = e.total
+            ? `Mengunduh ${Math.round((e.loaded / e.total) * 100)}%`
+            : `Mengunduh ${(e.loaded / 1048576).toFixed(1)} MB`;
+        }
+      },
+    });
+    const filename = saveBlobResponse(response, `${name || 'Drive'}.zip`);
+    const count = Number(response.headers['x-archive-files'] || 0);
+    const missing = Number(response.headers['x-archive-missing'] || 0);
+    addToast({
+      type: missing ? 'warning' : 'success',
+      title: 'Arsip ZIP siap',
+      message: `${filename} berisi ${count} file.` + (missing ? ` ${missing} file tidak ditemukan di server dan dilewati.` : ''),
+    });
+    clearSelection();
+  } catch (error) {
+    console.error('Archive download failed', error);
+    addToast({ type: 'error', title: 'Gagal membuat ZIP', message: await blobErrorMessage(error, 'Arsip tidak bisa dibuat. Coba lagi.') });
+  } finally {
+    downloading.value = false;
+  }
+};
+
+const onKeydown = (event) => {
+  if (event.key === 'Escape' && selectedCount.value && !downloadModalVisible.value) clearSelection();
+};
+
+onMounted(() => {
+  fetchUsers();
+  document.addEventListener('keydown', onKeydown);
+});
+onUnmounted(() => document.removeEventListener('keydown', onKeydown));
 </script>
 
 <style scoped>
@@ -322,13 +512,46 @@ onMounted(fetchUsers);
 @media (min-width: 768px) { .content-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 1024px) { .content-grid { grid-template-columns: repeat(4, 1fr); } }
 
-.folder-card { display: flex; align-items: center; gap: .65rem; padding: .7rem .85rem; min-width: 0; background: var(--bg-secondary); border: 1px solid var(--separator); border-radius: 8px; cursor: pointer; transition: background .15s ease, border-color .15s ease; }
-.folder-card:hover { background: var(--fill-secondary); }
-.folder-glyph { color: #fbbc04; }
+/* Download / selection bar above the content */
+.content-actions {
+  display: flex; align-items: center; gap: .65rem; min-height: 50px;
+  padding: .4rem .75rem; border-bottom: 1px solid var(--separator);
+  transition: background .15s ease;
+}
+.content-actions.is-selecting { background: var(--accent-tint); }
+.select-all { display: inline-flex; align-items: center; gap: .55rem; font-size: .8125rem; font-weight: 500; color: var(--text-secondary); cursor: pointer; user-select: none; }
+.actions-meta { font-size: .8125rem; color: var(--text-muted); white-space: nowrap; }
+.selection-count { font-size: .875rem; font-weight: 600; color: #1e40af; white-space: nowrap; }
 
-.file-card { display: flex; flex-direction: column; padding: .6rem; min-width: 0; background: var(--bg-secondary); border: 1px solid var(--separator); border-radius: 8px; cursor: pointer; transition: box-shadow .15s ease; }
-.file-card:hover { box-shadow: var(--shadow-hover); }
-.file-thumb { height: 6rem; display: flex; align-items: center; justify-content: center; margin-bottom: .65rem; border-radius: 6px; background: var(--fill-secondary); color: var(--accent-primary); }
+.folder-card { position: relative; display: flex; align-items: center; gap: .65rem; min-height: 54px; padding: .65rem .8rem; min-width: 0; background: var(--bg-secondary); border: 1px solid var(--separator); border-radius: 12px; box-shadow: var(--shadow-card); cursor: pointer; user-select: none; transition: border-color .15s ease, box-shadow .15s ease; }
+.folder-card:hover { border-color: #cfd7e2; box-shadow: var(--shadow-hover); }
+.folder-glyph { color: #f5b70a; }
+
+.file-card { position: relative; display: flex; flex-direction: column; min-width: 0; overflow: hidden; background: var(--bg-secondary); border: 1px solid var(--separator); border-radius: 14px; box-shadow: var(--shadow-card); cursor: pointer; user-select: none; transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+.file-card:hover { border-color: #cfd7e2; box-shadow: var(--shadow-hover); transform: translateY(-1px); }
+.file-thumb { position: relative; height: 112px; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, #f8fafc, #f1f4f8); border-bottom: 1px solid var(--separator); }
+.file-info { display: flex; flex-direction: column; gap: .2rem; padding: .65rem .75rem .75rem; min-width: 0; }
+.file-name { font-size: .8125rem; font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-meta { font-size: .72rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Selection */
+.folder-card.is-selected, .file-card.is-selected { border-color: var(--accent-primary); box-shadow: 0 0 0 1px var(--accent-primary); background: #f5f9ff; }
+.file-card.is-selected .file-thumb { background: var(--accent-tint); }
+.item-check { opacity: 0; transition: opacity .12s ease; }
+.thumb-check { position: absolute; top: .55rem; left: .55rem; }
+.folder-card .item-check { position: absolute; left: .8rem; }
+.folder-card:hover .item-check, .file-card:hover .item-check, .item-check:checked, .item-check:focus-visible,
+.monitor-page:has(.content-actions.is-selecting) .item-check { opacity: 1; }
+.folder-card:hover .folder-glyph, .folder-card.is-selected .folder-glyph,
+.monitor-page:has(.content-actions.is-selecting) .folder-glyph { opacity: 0; }
+.thumb-download { position: absolute; top: .45rem; right: .45rem; width: 30px; height: 30px; border-radius: 8px; background: #fff; box-shadow: var(--shadow-card); opacity: 0; transition: opacity .12s ease; }
+.file-card:hover .thumb-download, .thumb-download:focus-visible { opacity: 1; }
+.monitor-page:has(.content-actions.is-selecting) .thumb-download { display: none; }
+@media (hover: none) {
+  .item-check, .thumb-download { opacity: 1; }
+  .folder-card .folder-glyph { display: none; }
+  .folder-card .item-check { position: static; }
+}
 
 .grid-in-enter-active { transition: opacity .4s ease, transform .4s cubic-bezier(.2,.8,.2,1); transition-delay: var(--d, 0ms); }
 .grid-in-enter-from { opacity: 0; transform: translateY(12px); }
